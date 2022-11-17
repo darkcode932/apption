@@ -1,4 +1,5 @@
 //import { useEffect } from "react";
+import Layout from "../layouts/layout";
 import "../styles/globals.css";
 
 import NProgress from 'nprogress';
@@ -18,7 +19,9 @@ Router.events.on('routeChangeError', () => NProgress.done());
 
 function MyApp({ Component, pageProps }) {
   return (
+    <Layout>
       <Component {...pageProps} />
+    </Layout>
   );
 }
 
