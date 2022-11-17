@@ -2,8 +2,6 @@ import React from "react";
 import ButtonClick from "../components/ButtonClick";
 import {
   FaFacebook,
-  FaApple,
-  FaLinkedinin,
   FaGooglePlus,
 } from "react-icons/fa";
 import Link from "next/link";
@@ -28,6 +26,7 @@ function Login() {
           </div>
           <form className="flex flex-col items-center w-2/3 space-y-2">
             <input type="email" id="emailLog" placeholder="Ex: atebede@gmail.com" className="rounded-full w-full px-3 py-2 bg-green-100 placeholder:text-xs text-gray-500 outline-none" />
+            <input type="password" id="passLog" placeholder="Password" className="rounded-full w-full px-3 py-2 bg-green-100 placeholder:text-xs text-gray-500 outline-none" />
             <Link href="/">
               <ButtonClick
                 text="Sign In"
