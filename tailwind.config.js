@@ -23,5 +23,7 @@ module.exports = {
       xxl: { min: "1600px" },
     },
   },
-  plugins: [],
+  plugins: [
+    //require('@tailwindcss/forms'),
+  ],
 }
