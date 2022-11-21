@@ -29,7 +29,7 @@ export default function StepThree({ onSUbmit }: StepProps) {
             type="text"
             name="title"
             id="title"
-            className="block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+            className="block w-full border-0 p-0 text-gray-900 placeholder-gray-500 outline-none focus:ring-0 sm:text-sm"
             placeholder="Rendons sa liberté à Onomo"
           />
         </div>
@@ -51,7 +51,7 @@ export default function StepThree({ onSUbmit }: StepProps) {
               rows={4}
               name="comment"
               id="comment"
-              className="block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm bg-gray-100 focus:border-green-400 focus:ring-green-400 sm:text-sm"
+              className="block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm bg-gray-100 focus-within:border-green-400 focus-within:ring-1 focus-within:ring-green-400 outline-none sm:text-sm"
               defaultValue={""}
             />
           </div>
