@@ -7,7 +7,6 @@ export default function ({ children }: React.PropsWithChildren<{}>) {
     <>
     <Navbar />
       {children}
-      <Footer />
     </>
   );
 }

@@ -102,7 +102,7 @@ function Login() {
                       type="email"
                       autoComplete="email"
                       required
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                      className="block w-full bg-green-200 appearance-none rounded-full border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-green-400 focus:outline-none focus:ring-green-400 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -121,7 +121,7 @@ function Login() {
                       type="password"
                       autoComplete="current-password"
                       required
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                      className="block w-full appearance-none bg-green-200 rounded-full border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-green-400 focus:outline-none focus:ring-green-400 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -132,7 +132,7 @@ function Login() {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-green-400"
                     />
                     <label
                       htmlFor="remember-me"
@@ -145,7 +145,7 @@ function Login() {
                   <div className="text-sm">
                     <a
                       href="#"
-                      className="font-medium text-red-600 hover:text-indigo-500"
+                      className="font-medium text-red-600 hover:text-green-400"
                     >
                       Forgot your password?
                     </a>

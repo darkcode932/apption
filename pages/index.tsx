@@ -14,7 +14,7 @@ export default function Home() {
       <p className="text-3xl font-thin xs:text-lg xs:text-center">
         Creer des petitions et influencer le cours de l&apos;histoire !
       </p>
-      <Link href={'/login'}>
+      <Link href={'/home'}>
         <ButtonClick text='Démarrer' classArrow='text-2xl' classButton='rounded-xl bg-green-400 px-6 py-3' />
       </Link>
     </div>

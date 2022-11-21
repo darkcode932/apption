@@ -12,6 +12,7 @@ module.exports = {
         back2: 'url("/assets/images/bg_2.jpg")',
         back3: 'url("/assets/images/bg_3.jpg")',
         back4: 'url("/assets/images/bg_4.png")',
+        back5: 'url("/assets/images/presentation.jpg")',
       }
     },
     screens: {
