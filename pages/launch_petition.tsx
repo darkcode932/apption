@@ -2,6 +2,7 @@ import React from "react";
 import StepOne from "../components/Petititon/Steps/StepOne";
 import StepTwo from "../components/Petititon/Steps/StepTwo";
 import StepThree from "../components/Petititon/Steps/StepThree";
+import StepBar from "../components/Petititon/Steps/StepBar"
 
 function LaunchPetititon() {
   const [step, setStep] = React.useState<number>(0);
@@ -12,8 +13,10 @@ function LaunchPetititon() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-10">
-      <div></div>
+    <div className="flex flex-col items-center justify-center py-10 mx-10">
+      <div className="mb-10 w-full">
+        <StepBar id={""} name="" status={""} href="" />
+      </div>
       <div>
         {step == 0 && <StepOne onSUbmit={handleFormSubmit} />}
         {step == 1 && <StepTwo onSUbmit={handleFormSubmit} />}

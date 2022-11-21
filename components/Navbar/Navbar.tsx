@@ -130,7 +130,7 @@ export default function Navbar() {
                               "block px-4 py-2 text-sm text-gray-700"
                             )}
                           >
-                            Your Profile
+                            Votre Profile
                           </a>
                         )}
                       </Menu.Item>
@@ -143,7 +143,7 @@ export default function Navbar() {
                               "block px-4 py-2 text-sm text-gray-700"
                             )}
                           >
-                            Settings
+                            Paramètres
                           </a>
                         )}
                       </Menu.Item>
@@ -156,7 +156,7 @@ export default function Navbar() {
                               "block px-4 py-2 text-sm text-gray-700"
                             )}
                           >
-                            Sign out
+                            Déconnexion
                           </a>
                         )}
                       </Menu.Item>
