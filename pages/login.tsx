@@ -1,10 +1,22 @@
 import React from "react";
+import {useState} from 'react'
 import ButtonClick from "../components/ButtonClick";
-//import { FaFacebook, FaGooglePlus } from "react-icons/fa";
-import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/20/solid";
+//import { isEmpty } from "lodash";
+//import AuthError from "../components/Auth/Error";
+import { Input } from "../components/Auth/Input";
 import Link from "next/link";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 function Login() {
+
+  const [_passwordShow, setPasswordShow] = useState<boolean>(false);
+  //const [_error, setError] = useState<string>();
+
+  const handleSetPasswordShow = () => {
+    setPasswordShow(!_passwordShow);
+  };
+
+
   return (
     <div className="flex items-center justify-center bg-back2 bg-center bg-cover h-screen mx-auto w-full">
       <div className=" flex justify-between rounded-3xl space-x-10 pl-6 bg-back3 bg-cover bg-center shadow w-[900px] h-[500px]">
@@ -88,55 +100,50 @@ function Login() {
           </div>
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="py-8 px-4 sm:rounded-lg sm:px-10">
-              <form className="space-y-6" action="#" method="POST">
+              <form className="space-y-6" method='POST' action="#">
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block mb-2 text-sm font-medium text-gray-700"
                   >
                     Email
                   </label>
-                  <div className="relative mt-1 rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <EnvelopeIcon
-                        className="h-5 w-5 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <input
-                      id="email"
-                      name="emailLog"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="block w-full bg-green-200 appearance-none rounded-full border border-gray-300 px-10 py-2 placeholder-gray-400 shadow-sm focus:border-green-400 focus:outline-none focus:ring-green-400 sm:text-sm"
-                    />
-                  </div>
+                  <Input
+                    type="email"
+                    name="email"
+                    id="email"
+                    placeholder="exemple@fomain.io"
+                    required
+                  />
                 </div>
 
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm mb-2 font-medium text-gray-700"
                   >
                     Password
                   </label>
-                  <div className="relative mt-1 rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <LockClosedIcon
-                        className="h-5 w-5 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <input
-                      id="password"
-                      name="passwordLog"
-                      type="password"
-                      autoComplete=""
-                      required
-                      className="block w-full bg-green-200 appearance-none rounded-full border border-gray-300 px-10 py-2 placeholder-gray-400 shadow-sm focus:border-green-400 focus:outline-none focus:ring-green-400 sm:text-sm"
-                    />
-                  </div>
+                  <Input
+                    type={_passwordShow ? "text" : "password"}
+                    iconPosition="right"
+                    name="password"
+                    id="password"
+                    block
+                    rightIcon={
+                      _passwordShow ? (
+                        <EyeIcon
+                          height={18}
+                          onClick={() => handleSetPasswordShow()}
+                        />
+                      ) : (
+                        <EyeSlashIcon
+                          height={18}
+                          onClick={() => handleSetPasswordShow()}
+                        />
+                      )
+                    }
+                  />
                 </div>
 
                 <div className="flex items-center justify-between">
