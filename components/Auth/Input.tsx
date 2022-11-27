@@ -11,7 +11,7 @@ const inputSize = {
     "block",
     "px-4",
     "w-full",
-    "h-12",
+    "h-8",
     "border",
     "rounded-full",
     "sm:text-sm",

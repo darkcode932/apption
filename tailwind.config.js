@@ -13,6 +13,8 @@ module.exports = {
         back3: 'url("/assets/images/bg_3.jpg")',
         back4: 'url("/assets/images/bg_4.png")',
         back5: 'url("/assets/images/presentation.jpg")',
+        back6: 'url("/assets/images/limitation.jpg")',
+        back7: 'url("/assets/images/libération.jpg")',
       }
     },
     screens: {
