@@ -1,4 +1,5 @@
 //import { useEffect } from "react";
+import {useRouter} from 'next/router';
 import Layout from "../layouts/layout";
 import "../styles/globals.css";
 
@@ -18,6 +19,15 @@ Router.events.on('routeChangeError', () => NProgress.done());
 
 
 function MyApp({ Component, pageProps }) {
+
+  const router = useRouter();
+
+  if(router.asPath =='/')  {
+     return (
+       <Component {...pageProps} />
+     )
+  }
+
   return (
     <Layout>
       <Component {...pageProps} />

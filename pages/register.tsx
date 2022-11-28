@@ -126,7 +126,7 @@ function Register() {
               htmlFor="password"
               className="block text-sm mb-2 font-medium text-white"
             >
-              Enter Password
+              Confirm Password
             </label>
             <Input
               type={_cpasswordShown ? "text" : "password"}
