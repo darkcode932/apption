@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import {UserGroupIcon, BanknotesIcon, UserIcon} from "@heroicons/react/24/outline"
 
 function HomePet() {
   return (
@@ -14,9 +15,27 @@ function HomePet() {
             </div>
             <hr />
             <div className='grid grid-cols-3 h-20 divide-x'>
-              <div>ok</div>
-              <div>ok</div>
-              <div>ok</div>
+            <div className='flex items-center justify-center space-x-2'>
+                <UserIcon className='w-12 text-green-600' />
+                <div className='flex-col'>
+                  <p className='font-semibold text-sm'>Russel Atebede</p>
+                  <p className='text-xs'>From Cameroon</p>
+                </div>
+              </div>
+              <div className='flex items-center justify-center space-x-2'>
+                <UserGroupIcon className='w-12 text-green-600' />
+                <div className='flex-col'>
+                  <p className='font-semibold text-sm'>3500</p>
+                  <p className='text-xs'>Signataires</p>
+                </div>
+              </div>
+              <div className='flex items-center justify-center space-x-2'>
+                <BanknotesIcon className='w-12 text-green-600' />
+                <div className='flex-col'>
+                  <p className='font-semibold text-sm'>Sponsorisée</p>
+                  <p className='text-xs'>Non</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
