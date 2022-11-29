@@ -15,7 +15,7 @@ function LaunchPetititon() {
   return (
     <div className="flex flex-col items-center justify-center py-10 mx-10">
       <div className="mb-10 w-full">
-        <StepBar id={""} name="" status={""} href="" />
+        <StepBar id={1} name="" status={""} href="" />
       </div>
       <div>
         {step == 0 && <StepOne onSUbmit={handleFormSubmit} />}

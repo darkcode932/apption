@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import ButtonClick from "../../ButtonClick";
 
@@ -10,7 +11,8 @@ export default function StepThree({ onSUbmit }: StepProps) {
     <div className="flex flex-col space-y-6">
       <div className="flex-col space-y-4">
         <p className="font-bold text-4xl text-center">
-          Donnez un titre à votre Pétition, Ajouter une Photo(Optionnel) et dites nous en plus
+          Donnez un titre à votre Pétition, Ajouter une Photo(Optionnel) et
+          dites nous en plus
         </p>
         <p>
           Entrez un titre qui exprime clairemaent le changement que vous
@@ -96,7 +98,9 @@ export default function StepThree({ onSUbmit }: StepProps) {
                 </label>
                 <p className="pl-1">ou glisser la photo sur la surface</p>
               </div>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF taille maximum 10Mo</p>
+              <p className="text-xs text-gray-500">
+                PNG, JPG, GIF taille maximum 10Mo
+              </p>
             </div>
           </div>
         </div>
@@ -107,12 +111,14 @@ export default function StepThree({ onSUbmit }: StepProps) {
             classButton="rounded-full bg-gray-400 px-3 w-36 py-1 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
             onClick={() => onSUbmit(1)}
           />
-          <ButtonClick
-            text="Continuer"
-            classArrow="text-xl"
-            classButton="rounded-full bg-red-600 px-3 py-1 w-36 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
-            onClick={() => onSUbmit(3)}
-          />
+          <Link href={"/login"}>
+            <ButtonClick
+              text="Terminer"
+              classArrow="text-xl"
+              classButton="rounded-full bg-red-600 px-3 py-1 w-36 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
+              onClick={() => onSUbmit(3)}
+            />
+          </Link>
         </div>
       </form>
     </div>

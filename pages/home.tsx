@@ -19,7 +19,7 @@ function Home() {
               <span className="text-red-600">chaque jour</span>
             </p>
           </div>
-          <Link href={"/login"}>
+          <Link href={"/launch_petition"}>
             <ButtonClick
               text={"Lancer une petition"}
               classButton="rounded-xl bg-red-600 px-6 py-3"
