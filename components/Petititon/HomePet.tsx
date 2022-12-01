@@ -6,8 +6,8 @@ function HomePet() {
   return (
     <div className='flex flex-col space-y-6 items-center justify-center'>
         <p className='font-semibold text-red-600 text-xl'>Meilleurs Pétitions</p>
-        <div className='flex px-40 '>
-          <Image width={400} height={200} alt="slide" src={'/assets/images/card.jpg'} className='w-1/2 h-[302px]'/>
+        <div className='flex px-40 h-[305px]'>
+          <Image width={400} height={200} alt="slide" src={'/assets/images/card.jpg'} className='w-1/2 h-full'/>
           <div className='w-1/2 bg-gray-500'>
             <div className='flex flex-col space-y-10 py-10 px-4'>
               <p className='font-bold text-xl text-center'>L&apos;ENSPD sera dotée de toilettes publiques</p>
