@@ -10,7 +10,7 @@ export default function AuthError({error}){
         />
       </div>
       <div className="ml-3">
-        <p className="text-xs text-yellow-700">{error}</p>
+        <p className="text-xs text-red-500">{error}</p>
       </div>
     </div>
   )

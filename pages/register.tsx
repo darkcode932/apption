@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import {handleEmailSignUp} from '../config/firebase'
 import { Input } from "../components/Auth/Input";
 import Link from "next/link";
 import ButtonClick from "../components/ButtonClick";
@@ -17,6 +18,11 @@ function Register() {
   const handleSetCPasswordShown = () => {
     setCPasswordShown(!_cpasswordShown);
   };
+
+  const handleSignUp = (email, password) => {
+    handleEmailSignUp(email, password)
+  }
+
   return (
     <div className="flex items-center justify-center bg-back6 bg-center bg-cover h-screen mx-auto w-full">
       <div className="flex-col bg-back7 bg-center bg-cover px-24 py-6 rounded-2xl text-white">
@@ -154,7 +160,8 @@ function Register() {
           <ButtonClick
             text="Register"
             classArrow="text-xl"
-            classButton="rounded-full bg-green-400 px-3 py-1 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
+            classButton="rounded-full bg-green-400 px-3 py-1 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm"
+            onClick={handleSignUp}
           />
         </form>
       </div>

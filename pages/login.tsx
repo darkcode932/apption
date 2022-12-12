@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import ButtonClick from "../components/ButtonClick";
+import {handleEmailSignIn} from '../config/firebase'
 //import { isEmpty } from "lodash";
 //import AuthError from "../components/Auth/Error";
 import { Input } from "../components/Auth/Input";
@@ -8,12 +9,21 @@ import Link from "next/link";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 function Login() {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [_passwordShow, setPasswordShow] = useState<boolean>(false);
   //const [_error, setError] = useState<string>();
 
   const handleSetPasswordShow = () => {
     setPasswordShow(!_passwordShow);
   };
+
+  const handleSignIn = (email, password) => {
+    handleEmailSignIn(email, password);
+  };
+
+
 
   return (
     <div className="flex items-center justify-center bg-back2 bg-center bg-cover h-screen mx-auto w-full">
@@ -192,6 +202,7 @@ function Login() {
                     text="Sign Up"
                     classArrow="text-xl"
                     classButton="rounded-full bg-red-600 px-3 py-1 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
+                    onClick={() => handleSignIn(email, password)}
                   />
                 </div>
               </form>

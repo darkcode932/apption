@@ -69,8 +69,8 @@ const navigation = {
 
 export default function Footer() {
   return (
-    <footer className="">
-      <div className="mx-auto bg-black flex flex-col space-y-4 items-center overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="bg-green-500">
+      <div className="mx-auto  flex flex-col space-y-4 items-center overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
         <p className="text-center text-gray-400 font-semibold">Impacte les Décisons et changements dans le monde depuis 2022</p>
         <div className="mt-8 flex justify-center space-x-6">
           {navigation.social.map((item) => (

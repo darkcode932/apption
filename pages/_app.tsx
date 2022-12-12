@@ -27,6 +27,16 @@ function MyApp({ Component, pageProps }) {
        <Component {...pageProps} />
      )
   }
+  else if (router.asPath == '/login' ){
+    return (
+      <Component {...pageProps} />
+    )
+  }
+  else if (router.asPath == '/register'){
+    return (
+      <Component {...pageProps} />
+    )
+  }
 
   return (
     <Layout>
