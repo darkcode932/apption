@@ -130,6 +130,19 @@ export default function Navbar() {
                               "block px-4 py-2 text-sm text-gray-700"
                             )}
                           >
+                            Se connecter
+                          </a>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <a
+                            href="#"
+                            className={classNames(
+                              active ? "bg-gray-100" : "",
+                              "block px-4 py-2 text-sm text-gray-700"
+                            )}
+                          >
                             Votre Profile
                           </a>
                         )}
@@ -147,19 +160,6 @@ export default function Navbar() {
                           </a>
                         )}
                       </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <a
-                            href="#"
-                            className={classNames(
-                              active ? "bg-gray-100" : "",
-                              "block px-4 py-2 text-sm text-gray-700"
-                            )}
-                          >
-                            Déconnexion
-                          </a>
-                        )}
-                      </Menu.Item>
                     </Menu.Items>
                   </Transition>
                 </Menu>
@@ -172,31 +172,31 @@ export default function Navbar() {
               {/* Current: "bg-indigo-50 border-green-400 text-indigo-700", Default: "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800" */}
               <Disclosure.Button
                 as="a"
-                href="#"
+                href="/dashboard"
                 className="block border-l-4 border-green-400 bg-indigo-50 py-2 pl-3 pr-4 text-base font-medium text-indigo-700"
               >
                 Dashboard
               </Disclosure.Button>
               <Disclosure.Button
                 as="a"
-                href="#"
+                href="/lauch_petition"
                 className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
               >
-                Team
+                Lancer un pétition
               </Disclosure.Button>
               <Disclosure.Button
                 as="a"
                 href="#"
                 className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
               >
-                Projects
+                Mes Pétiions
               </Disclosure.Button>
               <Disclosure.Button
                 as="a"
                 href="#"
                 className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
               >
-                Calendar
+                Parcourir les Pétiitons
               </Disclosure.Button>
             </div>
             <div className="border-t border-gray-200 pt-4 pb-3">
@@ -210,10 +210,10 @@ export default function Navbar() {
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">
-                    Tom Cook
+                    Okok
                   </div>
                   <div className="text-sm font-medium text-gray-500">
-                    tom@example.com
+                    Okok@example.com
                   </div>
                 </div>
                 <button
@@ -230,21 +230,21 @@ export default function Navbar() {
                   href="#"
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                 >
-                  Your Profile
+                  Se Connecter
                 </Disclosure.Button>
                 <Disclosure.Button
                   as="a"
                   href="#"
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                 >
-                  Settings
+                  Votre Profile
                 </Disclosure.Button>
                 <Disclosure.Button
                   as="a"
                   href="#"
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                 >
-                  Sign out
+                  Paramètres
                 </Disclosure.Button>
               </div>
             </div>

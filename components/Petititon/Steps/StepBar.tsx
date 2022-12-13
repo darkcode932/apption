@@ -9,9 +9,9 @@ interface StepBarProps {
 }
 
 const steps: StepBarProps[] = [
-    { id: 1, name: 'Echelle', href: '#', status: 'complete' },
-  { id: 2, name: 'Catégories', href: '#', status: 'current' },
-  { id: 3, name: 'Details', href: '#', status: 'upcoming' },
+    { id: 1, name: 'Echelle', href: '/echelle', status: 'complete' },
+  { id: 2, name: 'Catégories', href: '/cat', status: 'current' },
+  { id: 3, name: 'Details', href: '/detail', status: 'complete' },
 ] 
 
 export default function StepBar({id, name, href, status}: StepBarProps) {

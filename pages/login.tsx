@@ -199,7 +199,7 @@ function Login() {
 
                 <div>
                   <ButtonClick
-                    text="Sign Up"
+                    text="Sign In"
                     classArrow="text-xl"
                     classButton="rounded-full bg-red-600 px-3 py-1 flex w-full justify-center border border-transparent  py-2 px-4 shadow-sm "
                     onClick={() => handleSignIn(email, password)}
@@ -210,7 +210,7 @@ function Login() {
           </div>
         </div>
         <div className="bg-back4 bg-cover bg-center rounded-2xl w-1/2 h-full text-white px-4 py-4">
-          <p className="text-green-400 font-bold translate-x-64">APPTION</p>
+          <p className="text-green-400 font-bold translate-x-64 hidden">APPTION</p>
           <div className="flex flex-col items-center text-center space-y-4 mt-28">
             <p className="font-bold text-4xl">New user ?</p>
             <p className="font-mono">

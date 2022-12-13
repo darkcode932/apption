@@ -24,7 +24,7 @@ function Register() {
   }
 
   return (
-    <div className="flex items-center justify-center bg-back6 bg-center bg-cover h-screen mx-auto w-full">
+    <div className="flex items-center justify-center bg-back6 bg-center bg-cover h-screen mx-auto w-full py-10">
       <div className="flex-col bg-back7 bg-center bg-cover px-24 py-6 rounded-2xl text-white">
         <div className="flex-col justify-center text-center space-y-4 mb-4">
           <p className="font-bold text-4xl">
@@ -164,6 +164,7 @@ function Register() {
             onClick={handleSignUp}
           />
         </form>
+        <p className="text-center mt-2">Already Have an Account ? <Link href={'/login'} className="text-green-400 font-semibold hover:underline">Sign In</Link></p>
       </div>
     </div>
   );
