@@ -34,4 +34,7 @@ export interface AuthRepository {
 
   /** Send a password reset email via Firebase. */
   sendPasswordReset(email: string): Promise<void>;
+
+  /** Upload an avatar picture to Firebase Storage and return the URL. */
+  uploadAvatar(userId: string, imageFile: File): Promise<string>;
 }

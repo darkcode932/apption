@@ -8,11 +8,13 @@ import { SignInWithGoogleUseCase } from "../domain/usecases/auth/SignInWithGoogl
 import { SignInWithFacebookUseCase } from "../domain/usecases/auth/SignInWithFacebookUseCase";
 import { UpdateUserProfileUseCase } from "../domain/usecases/auth/UpdateUserProfileUseCase";
 import { SendPasswordResetUseCase } from "../domain/usecases/auth/SendPasswordResetUseCase";
+import { UploadAvatarUseCase } from "../domain/usecases/auth/UploadAvatarUseCase";
 import { CreatePetitionUseCase } from "../domain/usecases/petition/CreatePetitionUseCase";
 import { GetPetitionUseCase } from "../domain/usecases/petition/GetPetitionUseCase";
 import { GetPetitionsUseCase } from "../domain/usecases/petition/GetPetitionsUseCase";
 import { GetPetitionsByUserIdUseCase } from "../domain/usecases/petition/GetPetitionsByUserIdUseCase";
 import { SignPetitionUseCase } from "../domain/usecases/petition/SignPetitionUseCase";
+import { AddCommentUseCase } from "../domain/usecases/petition/AddCommentUseCase";
 
 const authRepository = new FirebaseAuthRepository();
 const petitionRepository = new FirebasePetitionRepository();
@@ -25,12 +27,14 @@ export const signInWithGoogleUseCase = new SignInWithGoogleUseCase(authRepositor
 export const signInWithFacebookUseCase = new SignInWithFacebookUseCase(authRepository);
 export const updateUserProfileUseCase = new UpdateUserProfileUseCase(authRepository);
 export const sendPasswordResetUseCase = new SendPasswordResetUseCase(authRepository);
+export const uploadAvatarUseCase = new UploadAvatarUseCase(authRepository);
 
 export const createPetitionUseCase = new CreatePetitionUseCase(petitionRepository);
 export const getPetitionUseCase = new GetPetitionUseCase(petitionRepository);
 export const getPetitionsUseCase = new GetPetitionsUseCase(petitionRepository);
 export const getPetitionsByUserIdUseCase = new GetPetitionsByUserIdUseCase(petitionRepository);
 export const signPetitionUseCase = new SignPetitionUseCase(petitionRepository);
+export const addCommentUseCase = new AddCommentUseCase(petitionRepository);
 
 export { authRepository, petitionRepository };
 export type { AuthRepository } from "../domain/repositories/AuthRepository";

@@ -1,5 +1,6 @@
 import { PetitionRepository } from "../../domain/repositories/PetitionRepository";
 import { Petition } from "../../domain/entities/Petition";
+import { Comment } from "../../domain/entities/Comment";
 import { db, storage } from "./firebaseConfig";
 import {
   collection,
@@ -200,6 +201,71 @@ export class FirebasePetitionRepository implements PetitionRepository {
       (error) => {
         console.error("Petition snapshot error:", error);
         callback(null);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  async addComment(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    text: string
+  ): Promise<Comment> {
+    const commentData = {
+      userId,
+      userName,
+      text,
+      createdAt: Timestamp.now(),
+    };
+    const petitionDocRef = doc(db, "petition", petitionId);
+    const commentColRef = collection(petitionDocRef, "comments");
+    const docRef = await addDoc(commentColRef, commentData);
+    return {
+      id: docRef.id,
+      userId,
+      userName,
+      text,
+      createdAt: new Date(),
+    };
+  }
+
+  onCommentsSnapshot(
+    petitionId: string,
+    callback: (comments: Comment[]) => void
+  ): () => void {
+    const petitionDocRef = doc(db, "petition", petitionId);
+    const commentColRef = collection(petitionDocRef, "comments");
+    const q = query(commentColRef, orderBy("createdAt", "desc"));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const comments: Comment[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          let rawDate: Date;
+          if (data.createdAt && typeof data.createdAt.toDate === "function") {
+            rawDate = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            rawDate = new Date(data.createdAt);
+          } else {
+            rawDate = new Date();
+          }
+          comments.push({
+            id: doc.id,
+            userId: data.userId || "",
+            userName: data.userName || "",
+            text: data.text || "",
+            createdAt: rawDate,
+          });
+        });
+        callback(comments);
+      },
+      (error) => {
+        console.error("Comments snapshot error:", error);
+        callback([]);
       }
     );
 

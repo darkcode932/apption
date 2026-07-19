@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   updateUserProfileUseCase,
   getPetitionsByUserIdUseCase,
   getPetitionsUseCase,
+  uploadAvatarUseCase,
 } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
 import PetItem from "../../components/PetItem";
 import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
-import { HiUser, HiLocationMarker, HiPencilAlt, HiCheck, HiBriefcase } from "react-icons/hi";
+import { HiUser, HiLocationMarker, HiPencilAlt, HiCamera, HiBriefcase } from "react-icons/hi";
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Profile fields state
   const [isEditing, setIsEditing] = useState(false);
@@ -25,6 +27,9 @@ export default function ProfilePage() {
   const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Avatar upload state
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   
   // Lists state
   const [createdPetitions, setCreatedPetitions] = useState<Petition[]>([]);
@@ -53,7 +58,7 @@ export default function ProfilePage() {
         const created = await getPetitionsByUserIdUseCase.execute(user.id);
         setCreatedPetitions(created);
 
-        // Signed petitions (filter all petitions client-side to prevent complex index requirement)
+        // Signed petitions
         const all = await getPetitionsUseCase.execute();
         const signed = all.filter((p) => p.signatureUserIds.includes(user.id));
         setSignedPetitions(signed);
@@ -81,14 +86,46 @@ export default function ProfilePage() {
         location,
       });
       setIsEditing(false);
-      
-      // Force page reload or state update to sync AuthContext user
       window.location.reload();
     } catch (err: any) {
       console.error(err);
       setError("Une erreur est survenue lors de l'enregistrement.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (fileInputRef.current && !uploadingAvatar) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    setUploadingAvatar(true);
+    setError(null);
+    try {
+      // 1. Upload file to Storage
+      const downloadUrl = await uploadAvatarUseCase.execute(user.id, file);
+      
+      // 2. Update user profile document in Firestore
+      await updateUserProfileUseCase.execute(user.id, {
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
+        avatarUrl: downloadUrl,
+      });
+
+      // 3. Reload to refresh auth context state
+      window.location.reload();
+    } catch (err: any) {
+      console.error("Failed to upload avatar:", err);
+      setError("Erreur lors du chargement de l'avatar.");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -190,11 +227,37 @@ export default function ProfilePage() {
           </form>
         ) : (
           <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-8 text-center sm:text-left">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-green-500/20 overflow-hidden relative shadow-lg">
-              <img
-                className="object-cover w-full h-full"
-                src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username || user.email}`}
-                alt="Profile Avatar"
+            
+            {/* Interactive Avatar Container */}
+            <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-green-500/20 overflow-hidden relative shadow-lg transition-transform duration-300 group-hover:scale-105">
+                <img
+                  className={`object-cover w-full h-full transition-opacity duration-300 ${uploadingAvatar ? "opacity-30" : "group-hover:opacity-60"}`}
+                  src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username || user.email}`}
+                  alt="Profile Avatar"
+                />
+                
+                {/* Upload Overlay */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <HiCamera className="text-white text-2xl" />
+                  <span className="text-[10px] text-white font-bold uppercase tracking-wider mt-1">Changer</span>
+                </div>
+
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-green-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Invisible File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingAvatar}
               />
             </div>
             

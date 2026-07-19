@@ -1,4 +1,5 @@
 import { Petition } from "../entities/Petition";
+import { Comment } from "../entities/Comment";
 
 export interface PetitionRepository {
   createPetition(
@@ -21,5 +22,19 @@ export interface PetitionRepository {
   onPetitionSnapshot(
     id: string,
     callback: (petition: Petition | null) => void
+  ): () => void;
+
+  /** Add a comment under a petition. */
+  addComment(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    text: string
+  ): Promise<Comment>;
+
+  /** Subscribe to comments updates for a single petition. */
+  onCommentsSnapshot(
+    petitionId: string,
+    callback: (comments: Comment[]) => void
   ): () => void;
 }

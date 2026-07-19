@@ -1,6 +1,6 @@
 import { AuthRepository } from "../../domain/repositories/AuthRepository";
 import { User } from "../../domain/entities/User";
-import { auth, db } from "./firebaseConfig";
+import { auth, db, storage } from "./firebaseConfig";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -15,6 +15,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebaseAuthRepository implements AuthRepository {
   private async fetchUserData(uid: string, email: string): Promise<User> {
@@ -188,5 +189,11 @@ export class FirebaseAuthRepository implements AuthRepository {
 
   async sendPasswordReset(email: string): Promise<void> {
     await sendPasswordResetEmail(auth, email);
+  }
+
+  async uploadAvatar(userId: string, imageFile: File): Promise<string> {
+    const storageRef = ref(storage, `avatars/${userId}_${Date.now()}`);
+    const snapshot = await uploadBytes(storageRef, imageFile);
+    return getDownloadURL(snapshot.ref);
   }
 }

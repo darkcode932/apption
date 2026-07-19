@@ -1,0 +1,23 @@
+[debug] [2026-07-19T14:17:24.720Z] ----------------------------------------------------------------------
+[debug] [2026-07-19T14:17:24.726Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Asus\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js projects:list
+[debug] [2026-07-19T14:17:24.727Z] CLI Version:   11.16.1
+[debug] [2026-07-19T14:17:24.727Z] Platform:      win32
+[debug] [2026-07-19T14:17:24.727Z] Node Version:  v24.15.0
+[debug] [2026-07-19T14:17:24.727Z] Time:          Sun Jul 19 2026 15:17:24 GMT+0100 (heure d’Afrique de l’Ouest)
+[debug] [2026-07-19T14:17:24.728Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-07-19T14:17:24.743Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-07-19T14:17:24.827Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-07-19T14:17:24.828Z] > authorizing via signed-in user (atebederussel@gmail.com)
+[debug] [2026-07-19T14:17:24.842Z] > refreshing access token with scopes: []
+[debug] [2026-07-19T14:17:24.846Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-07-19T14:17:24.847Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-07-19T14:17:36.406Z] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-07-19T14:17:41.422Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\Asus\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:253:49)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+[error] 
+[error] Error: An unexpected error has occurred.
