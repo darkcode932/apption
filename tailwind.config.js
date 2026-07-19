@@ -1,9 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    "./src/app/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -15,6 +14,9 @@ module.exports = {
         back5: 'url("/assets/images/presentation.jpg")',
         back6: 'url("/assets/images/limitation.jpg")',
         back7: 'url("/assets/images/libération.jpg")',
+        back8: 'url("/assets/images/bg_6.png")',
+        back9: 'url("/assets/images/bg_7.png")',
+        back10: 'url("/assets/images/bg_8.png")',
       }
     },
     screens: {
@@ -26,7 +28,5 @@ module.exports = {
       xxl: { min: "1600px" },
     },
   },
-  plugins: [
-    //require('@tailwindcss/forms'),
-  ],
+  plugins: [],
 }

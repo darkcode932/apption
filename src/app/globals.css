@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #0b0b0f;
+    color: #e5e5e7;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-outfit), sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Card */
+  .glass-card {
+    background: rgba(22, 22, 28, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .glass-card-hover:hover {
+    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(24, 24, 32, 0.75);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), 0 0 15px 0 rgba(16, 185, 129, 0.08);
+  }
+
+  /* Interactive Inputs */
+  .glass-input {
+    background: rgba(10, 10, 12, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    transition: all 0.25s ease;
+  }
+  .glass-input:focus {
+    border-color: rgba(16, 185, 129, 0.7);
+    background: rgba(10, 10, 12, 0.75);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0b0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #23232f;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+/* Utility to hide scrollbar */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Radiant glow animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.glow-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
