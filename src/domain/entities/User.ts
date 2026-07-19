@@ -9,4 +9,8 @@ export interface User {
   avatarUrl?: string;
   isVerified?: boolean;
   officialTitle?: string;
+  latitude?: number;
+  longitude?: number;
+  country?: string;
+  city?: string;
 }

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "../../domain/entities/User";
 import { authRepository } from "../../infrastructure/ServiceLocator";
+import { geolocationService } from "../../infrastructure/geolocation/geolocationService";
 
 interface AuthContextType {
   user: User | null;
@@ -20,9 +21,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Subscribe to auth state changes using our clean architecture repo
-    const unsubscribe = authRepository.onAuthStateChanged((firebaseUser) => {
+    const unsubscribe = authRepository.onAuthStateChanged(async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+
+      if (firebaseUser) {
+        try {
+          // Auto-resolve location if not already defined on the user profile
+          if (!firebaseUser.latitude || !firebaseUser.longitude || !firebaseUser.city || !firebaseUser.country) {
+            const loc = await geolocationService.getCurrentLocation();
+            
+            // Update Firestore document
+            await authRepository.updateUserProfile(firebaseUser.id, {
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              city: loc.city,
+              country: loc.country,
+              location: firebaseUser.location || `${loc.city}, ${loc.country}`,
+            });
+
+            // Sync with local context state
+            setUser((prev) =>
+              prev && prev.id === firebaseUser.id
+                ? {
+                    ...prev,
+                    latitude: loc.latitude,
+                    longitude: loc.longitude,
+                    city: loc.city,
+                    country: loc.country,
+                    location: prev.location || `${loc.city}, ${loc.country}`,
+                  }
+                : prev
+            );
+          }
+        } catch (locErr) {
+          console.warn("Could not automatically update user location profile:", locErr);
+        }
+      }
     });
 
     return () => unsubscribe();

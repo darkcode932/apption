@@ -130,7 +130,11 @@ export default function LaunchPetitionPage() {
         category,
         user.id,
         user.username || `${user.firstname} ${user.lastname}`,
-        imageFile
+        imageFile,
+        user.latitude || 0,
+        user.longitude || 0,
+        user.country || "",
+        user.city || ""
       );
       router.push(`/petitions/${newPetition.id}`);
     } catch (err: any) {

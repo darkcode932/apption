@@ -10,7 +10,11 @@ export interface PetitionRepository {
     category: string,
     creatorId: string,
     creatorName: string,
-    imageFile?: File | null
+    imageFile?: File | null,
+    latitude?: number,
+    longitude?: number,
+    country?: string,
+    city?: string
   ): Promise<Petition>;
   getPetitionById(id: string): Promise<Petition | null>;
   getAllPetitions(category?: string, scale?: string): Promise<Petition[]>;

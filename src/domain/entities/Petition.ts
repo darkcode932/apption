@@ -14,4 +14,8 @@ export interface Petition {
   signatureUserIds: string[];
   signatureNames: string[];
   status?: "active" | "victory";
+  latitude?: number;
+  longitude?: number;
+  country?: string;
+  city?: string;
 }

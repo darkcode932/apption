@@ -11,7 +11,11 @@ export class CreatePetitionUseCase {
     category: string,
     creatorId: string,
     creatorName: string,
-    imageFile?: File | null
+    imageFile?: File | null,
+    latitude?: number,
+    longitude?: number,
+    country?: string,
+    city?: string
   ): Promise<Petition> {
     return this.petitionRepository.createPetition(
       title,
@@ -20,7 +24,11 @@ export class CreatePetitionUseCase {
       category,
       creatorId,
       creatorName,
-      imageFile
+      imageFile,
+      latitude,
+      longitude,
+      country,
+      city
     );
   }
 }

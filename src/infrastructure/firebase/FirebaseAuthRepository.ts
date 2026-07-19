@@ -175,12 +175,16 @@ export class FirebaseAuthRepository implements AuthRepository {
   async updateUserProfile(
     userId: string,
     data: {
-      firstname: string;
-      lastname: string;
-      username: string;
+      firstname?: string;
+      lastname?: string;
+      username?: string;
       bio?: string;
       location?: string;
       avatarUrl?: string;
+      latitude?: number;
+      longitude?: number;
+      country?: string;
+      city?: string;
     }
   ): Promise<void> {
     const userDocRef = doc(db, "users", userId);

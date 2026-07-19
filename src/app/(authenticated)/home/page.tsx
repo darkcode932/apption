@@ -7,6 +7,8 @@ import PetItem from "../../components/PetItem";
 import HomePet from "../../components/HomePet";
 import { getPetitionsUseCase } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
+import { useAuth } from "../../contexts/AuthContext";
+import { geolocationService } from "../../../infrastructure/geolocation/geolocationService";
 
 const fallbackPetitions = [
   {
@@ -27,8 +29,10 @@ const fallbackPetitions = [
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [feedMode, setFeedMode] = useState<"targeted" | "global">("targeted");
 
   useEffect(() => {
     async function loadPetitions() {
@@ -44,11 +48,54 @@ export default function HomePage() {
     loadPetitions();
   }, []);
 
-  const highlightPetition = petitions.length > 0 ? petitions[0] : null;
-  const gridPetitions = petitions.length > 1 ? petitions.slice(1, 4) : [];
+  // Filter petitions based on feedMode & geolocation metrics
+  const getFilteredPetitions = () => {
+    if (feedMode === "global" || !user) {
+      return petitions;
+    }
+
+    return petitions.filter((pet) => {
+      // 1. International is visible to everyone
+      if (pet.scale === "International") {
+        return true;
+      }
+
+      // 2. National is visible to same-country citizens
+      if (pet.scale === "National") {
+        if (!user.country || !pet.country) return true; // fallback
+        return user.country.toLowerCase() === pet.country.toLowerCase();
+      }
+
+      // 3. Ville is visible if same city name OR coordinates are within 50km
+      if (pet.scale === "Ville") {
+        if (user.city && pet.city && user.city.toLowerCase() === pet.city.toLowerCase()) {
+          return true;
+        }
+
+        if (user.latitude && user.longitude && pet.latitude && pet.longitude) {
+          const distance = geolocationService.getDistanceInKm(
+            user.latitude,
+            user.longitude,
+            pet.latitude,
+            pet.longitude
+          );
+          return distance <= 50;
+        }
+
+        // fallback if user coordinates are not fully loaded/approved yet
+        return true;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredPetitions = getFilteredPetitions();
+  const highlightPetition = filteredPetitions.length > 0 ? filteredPetitions[0] : null;
+  const gridPetitions = filteredPetitions.length > 1 ? filteredPetitions.slice(1, 4) : [];
 
   return (
-    <div className="flex flex-col py-10 space-y-16 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="flex flex-col py-10 space-y-12 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
       {/* Decorative Blur Glows */}
       <div className="absolute top-1/4 left-10 w-80 h-80 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -82,8 +129,34 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {/* Geotargeted Switch */}
+      {user && (
+        <div className="flex justify-center space-x-2.5 relative z-10">
+          <button
+            onClick={() => setFeedMode("targeted")}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+              feedMode === "targeted"
+                ? "bg-green-500 text-neutral-950 border-green-500 shadow-md font-extrabold"
+                : "border-white/5 bg-neutral-950/30 text-neutral-400 hover:border-white/10 hover:text-white"
+            }`}
+          >
+            📍 Autour de moi ({user.city || "Local"})
+          </button>
+          <button
+            onClick={() => setFeedMode("global")}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+              feedMode === "global"
+                ? "bg-green-500 text-neutral-950 border-green-500 shadow-md font-extrabold"
+                : "border-white/5 bg-neutral-950/30 text-neutral-400 hover:border-white/10 hover:text-white"
+            }`}
+          >
+            🌍 Toutes les causes (Mondial)
+          </button>
+        </div>
+      )}
+
       {/* Highlight Petition */}
-      <div className="space-y-6 relative z-10">
+      <div className="space-y-6 relative z-10 pt-2">
         <h2 className="text-center font-extrabold text-red-500 text-2xl tracking-wide uppercase sm:text-3xl font-display">
           À la une
         </h2>
@@ -113,7 +186,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-            {petitions.length > 0 ? (
+            {filteredPetitions.length > 0 ? (
               <>
                 {gridPetitions.map((pet) => (
                   <PetItem
@@ -121,9 +194,10 @@ export default function HomePage() {
                     id={pet.id}
                     text={pet.title}
                     link={pet.imageUrl || "/assets/images/libération.jpg"}
+                    status={pet.status}
                   />
                 ))}
-                {gridPetitions.length === 0 && petitions.length === 1 && (
+                {gridPetitions.length === 0 && filteredPetitions.length === 1 && (
                   <p className="col-span-full text-neutral-500 text-sm py-4 italic">
                     Aucune autre pétition pour le moment.
                   </p>

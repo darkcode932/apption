@@ -5,6 +5,8 @@ import { getPetitionsUseCase } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
 import PetItem from "../../components/PetItem";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { useAuth } from "../../contexts/AuthContext";
+import { geolocationService } from "../../../infrastructure/geolocation/geolocationService";
 
 const categories = [
   "Toutes",
@@ -26,6 +28,7 @@ const scales = [
 ];
 
 export default function PetitionsListPage() {
+  const { user } = useAuth();
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +36,7 @@ export default function PetitionsListPage() {
   const [selectedScale, setSelectedScale] = useState("Toutes");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("recent"); // "recent" | "popular" | "views"
+  const [feedMode, setFeedMode] = useState<"targeted" | "global">("targeted");
 
   useEffect(() => {
     async function loadFilteredPetitions() {
@@ -52,13 +56,40 @@ export default function PetitionsListPage() {
     loadFilteredPetitions();
   }, [selectedCategory, selectedScale]);
 
-  // Client-side searching and sorting
+  // Client-side searching, sorting and geotargeted filtering
   const filteredAndSortedPetitions = petitions
     .filter((pet) => {
+      // 1. Text Search Filter
       const matchSearch =
         pet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.description.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchSearch;
+      if (!matchSearch) return false;
+
+      // 2. Geotargeted Range Filter
+      if (feedMode === "targeted" && user) {
+        if (pet.scale === "National") {
+          if (user.country && pet.country && user.country.toLowerCase() !== pet.country.toLowerCase()) {
+            return false;
+          }
+        } else if (pet.scale === "Ville") {
+          const sameCity = user.city && pet.city && user.city.toLowerCase() === pet.city.toLowerCase();
+          let withinRadius = false;
+          if (user.latitude && user.longitude && pet.latitude && pet.longitude) {
+            const distance = geolocationService.getDistanceInKm(
+              user.latitude,
+              user.longitude,
+              pet.latitude,
+              pet.longitude
+            );
+            withinRadius = distance <= 50;
+          }
+          if (!sameCity && !withinRadius) {
+            return false;
+          }
+        }
+      }
+
+      return true;
     })
     .sort((a, b) => {
       if (sortBy === "popular") {
@@ -67,7 +98,7 @@ export default function PetitionsListPage() {
       if (sortBy === "views") {
         return b.views - a.views;
       }
-      // default to "recent" (handled by firestore creation order, but sort just in case)
+      // default to "recent"
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
@@ -119,8 +150,38 @@ export default function PetitionsListPage() {
         </div>
 
         {/* Filters Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 bg-[#16161c]/40 border border-white/5 p-4 rounded-2xl items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center w-full">
+        <div className="flex flex-col lg:flex-row gap-4 bg-[#16161c]/40 border border-white/5 p-4 rounded-2xl items-center justify-between">
+          <div className="flex flex-wrap gap-4 items-center w-full">
+            {/* Targeted Switch */}
+            {user && (
+              <div className="flex bg-neutral-955 border border-white/5 rounded-full p-[2px] items-center">
+                <button
+                  type="button"
+                  onClick={() => setFeedMode("targeted")}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    feedMode === "targeted"
+                      ? "bg-green-500 text-neutral-950 font-extrabold"
+                      : "text-neutral-450 hover:text-white"
+                  }`}
+                >
+                  📍 Autour de moi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedMode("global")}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    feedMode === "global"
+                      ? "bg-green-500 text-neutral-950 font-extrabold"
+                      : "text-neutral-450 hover:text-white"
+                  }`}
+                >
+                  🌍 Global
+                </button>
+              </div>
+            )}
+
+            <div className="hidden lg:block h-6 w-px bg-white/10" />
+
             {/* Category selection list */}
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => {
@@ -141,7 +202,7 @@ export default function PetitionsListPage() {
               })}
             </div>
 
-            <div className="hidden sm:block h-6 w-px bg-white/10 mx-2" />
+            <div className="hidden lg:block h-6 w-px bg-white/10" />
 
             {/* Scale Filter select */}
             <div className="flex items-center space-x-2 w-full sm:w-auto">
@@ -163,7 +224,7 @@ export default function PetitionsListPage() {
             </div>
           </div>
 
-          <div className="text-xs text-neutral-500 self-end sm:self-center whitespace-nowrap pt-2 sm:pt-0 pl-1 font-medium">
+          <div className="text-xs text-neutral-500 self-end lg:self-center whitespace-nowrap pt-2 lg:pt-0 pl-1 font-medium">
             <span className="text-green-400 font-bold">{filteredAndSortedPetitions.length}</span> pétition(s) trouvée(s)
           </div>
         </div>
@@ -179,7 +240,7 @@ export default function PetitionsListPage() {
       ) : filteredAndSortedPetitions.length === 0 ? (
         <div className="flex-grow flex flex-col items-center justify-center py-16 text-center text-neutral-400 relative z-10">
           <p className="font-semibold">Aucune pétition ne correspond à vos critères.</p>
-          <p className="text-xs text-neutral-500 mt-1.5">Essayez d&apos;ajuster la recherche ou les filtres.</p>
+          <p className="text-xs text-neutral-500 mt-1.5">Essayez d&apos;ajuster la recherche, le filtre de géolocalisation ou les filtres d&apos;échelle.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center relative z-10">

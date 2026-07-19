@@ -48,6 +48,10 @@ export class FirebasePetitionRepository implements PetitionRepository {
       signatureUserIds: data.signatureUserIds || [],
       signatureNames: data.signatureNames || [],
       status: data.status || "active",
+      latitude: data.latitude !== undefined ? data.latitude : 0,
+      longitude: data.longitude !== undefined ? data.longitude : 0,
+      country: data.country || "",
+      city: data.city || "",
     };
   }
 
@@ -58,7 +62,11 @@ export class FirebasePetitionRepository implements PetitionRepository {
     category: string,
     creatorId: string,
     creatorName: string,
-    imageFile?: File | null
+    imageFile?: File | null,
+    latitude?: number,
+    longitude?: number,
+    country?: string,
+    city?: string
   ): Promise<Petition> {
     let imageUrl = "/assets/images/libération.jpg"; // default fallback
 
@@ -97,6 +105,10 @@ export class FirebasePetitionRepository implements PetitionRepository {
       signatureUserIds: [creatorId],
       signatureNames: [creatorName],
       status: "active",
+      latitude: latitude || 0,
+      longitude: longitude || 0,
+      country: country || "",
+      city: city || "",
     };
 
     const docRef = await addDoc(collection(db, "petition"), petitionData);
