@@ -349,6 +349,7 @@ export default function ProfilePage() {
                   id={pet.id}
                   text={pet.title}
                   link={pet.imageUrl || "/assets/images/libération.jpg"}
+                  status={pet.status}
                 />
               ))}
             </div>
@@ -365,6 +366,7 @@ export default function ProfilePage() {
                 id={pet.id}
                 text={pet.title}
                 link={pet.imageUrl || "/assets/images/libération.jpg"}
+                status={pet.status}
               />
             ))}
           </div>

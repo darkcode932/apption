@@ -1,6 +1,7 @@
 import { PetitionRepository } from "../../domain/repositories/PetitionRepository";
 import { Petition } from "../../domain/entities/Petition";
 import { Comment } from "../../domain/entities/Comment";
+import { TimelineEvent } from "../../domain/entities/TimelineEvent";
 import { db, storage } from "./firebaseConfig";
 import {
   collection,
@@ -46,6 +47,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
       shares: data.shares || 0,
       signatureUserIds: data.signatureUserIds || [],
       signatureNames: data.signatureNames || [],
+      status: data.status || "active",
     };
   }
 
@@ -94,6 +96,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
       shares: 0,
       signatureUserIds: [creatorId],
       signatureNames: [creatorName],
+      status: "active",
     };
 
     const docRef = await addDoc(collection(db, "petition"), petitionData);
@@ -270,5 +273,84 @@ export class FirebasePetitionRepository implements PetitionRepository {
     );
 
     return unsubscribe;
+  }
+
+  async addTimelineEvent(
+    petitionId: string,
+    event: Omit<TimelineEvent, "id" | "createdAt">
+  ): Promise<TimelineEvent> {
+    const eventData = {
+      authorId: event.authorId,
+      authorName: event.authorName,
+      authorAvatarUrl: event.authorAvatarUrl || "",
+      officialTitle: event.officialTitle || "",
+      isOfficialResponse: event.isOfficialResponse,
+      title: event.title,
+      description: event.description,
+      type: event.type,
+      createdAt: Timestamp.now(),
+    };
+    const petitionDocRef = doc(db, "petition", petitionId);
+    const timelineColRef = collection(petitionDocRef, "timeline");
+    const docRef = await addDoc(timelineColRef, eventData);
+    return {
+      id: docRef.id,
+      ...event,
+      createdAt: new Date(),
+    };
+  }
+
+  onTimelineSnapshot(
+    petitionId: string,
+    callback: (events: TimelineEvent[]) => void
+  ): () => void {
+    const petitionDocRef = doc(db, "petition", petitionId);
+    const timelineColRef = collection(petitionDocRef, "timeline");
+    const q = query(timelineColRef, orderBy("createdAt", "desc"));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const events: TimelineEvent[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          let rawDate: Date;
+          if (data.createdAt && typeof data.createdAt.toDate === "function") {
+            rawDate = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            rawDate = new Date(data.createdAt);
+          } else {
+            rawDate = new Date();
+          }
+          events.push({
+            id: doc.id,
+            petitionId,
+            authorId: data.authorId || "",
+            authorName: data.authorName || "",
+            authorAvatarUrl: data.authorAvatarUrl || "",
+            officialTitle: data.officialTitle || "",
+            isOfficialResponse: !!data.isOfficialResponse,
+            title: data.title || "",
+            description: data.description || "",
+            createdAt: rawDate,
+            type: data.type || "milestone",
+          });
+        });
+        callback(events);
+      },
+      (error) => {
+        console.error("Timeline snapshot error:", error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  async declareVictory(petitionId: string): Promise<void> {
+    const docRef = doc(db, "petition", petitionId);
+    await updateDoc(docRef, {
+      status: "victory",
+    });
   }
 }

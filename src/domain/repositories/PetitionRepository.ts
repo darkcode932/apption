@@ -1,5 +1,6 @@
 import { Petition } from "../entities/Petition";
 import { Comment } from "../entities/Comment";
+import { TimelineEvent } from "../entities/TimelineEvent";
 
 export interface PetitionRepository {
   createPetition(
@@ -37,4 +38,19 @@ export interface PetitionRepository {
     petitionId: string,
     callback: (comments: Comment[]) => void
   ): () => void;
+
+  /** Add an update or official statement to the petition timeline. */
+  addTimelineEvent(
+    petitionId: string,
+    event: Omit<TimelineEvent, "id" | "createdAt">
+  ): Promise<TimelineEvent>;
+
+  /** Subscribe to real-time timeline events updates for a single petition. */
+  onTimelineSnapshot(
+    petitionId: string,
+    callback: (events: TimelineEvent[]) => void
+  ): () => void;
+
+  /** Mark a petition as successful (victory). */
+  declareVictory(petitionId: string): Promise<void>;
 }

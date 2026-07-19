@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { UserGroupIcon, BanknotesIcon, UserIcon } from "@heroicons/react/24/outline";
+import { HiTrophy } from "react-icons/hi2";
 import { Petition } from "../../domain/entities/Petition";
 
 interface HomePetProps {
@@ -18,9 +19,10 @@ export default function HomePet({ petition }: HomePetProps) {
   const imageUrl = petition?.imageUrl || "/assets/images/card.jpg";
   const creatorName = petition?.creatorName || "Russel Atebede";
   const signaturesCount = petition?.signaturesCount || 3500;
+  const isVictory = petition?.status === "victory";
 
   const content = (
-    <div className="group flex flex-col md:flex-row rounded-3xl overflow-hidden glass-card max-w-5xl w-full md:h-[350px] transition-all duration-300 hover:border-green-500/20 hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)]">
+    <div className="group flex flex-col md:flex-row rounded-3xl overflow-hidden glass-card max-w-5xl w-full md:h-[350px] transition-all duration-300 hover:border-green-500/20 hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)] relative">
       <div className="w-full md:w-1/2 h-[200px] md:h-full overflow-hidden border-b md:border-b-0 md:border-r border-white/5">
         <img
           alt="Highlight petition image"
@@ -30,13 +32,21 @@ export default function HomePet({ petition }: HomePetProps) {
       </div>
       <div className="w-full md:w-1/2 flex flex-col justify-between">
         <div className="flex flex-col space-y-4 py-8 px-6 md:px-8">
-          <span className="text-xs uppercase text-red-500 font-bold tracking-widest">
-            À la une
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase text-red-500 font-bold tracking-widest">
+              À la une
+            </span>
+            {isVictory && (
+              <span className="flex items-center space-x-1.5 py-1 px-3 bg-yellow-500 text-neutral-950 font-extrabold text-[10px] uppercase tracking-wider rounded-full shadow-md shadow-yellow-500/10 animate-pulse">
+                <HiTrophy className="text-xs" />
+                <span>Victoire !</span>
+              </span>
+            )}
+          </div>
           <h3 className="font-extrabold text-2xl text-white line-clamp-2 leading-snug font-display">
             {title}
           </h3>
-          <p className="text-neutral-400 text-sm font-light leading-relaxed line-clamp-3">
+          <p className="text-neutral-450 text-sm font-light leading-relaxed line-clamp-3">
             {description}
           </p>
         </div>

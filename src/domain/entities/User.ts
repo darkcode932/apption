@@ -7,4 +7,6 @@ export interface User {
   bio?: string;
   location?: string;
   avatarUrl?: string;
+  isVerified?: boolean;
+  officialTitle?: string;
 }

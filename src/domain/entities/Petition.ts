@@ -13,4 +13,5 @@ export interface Petition {
   shares: number;
   signatureUserIds: string[];
   signatureNames: string[];
+  status?: "active" | "victory";
 }

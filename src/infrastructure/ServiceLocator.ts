@@ -15,6 +15,8 @@ import { GetPetitionsUseCase } from "../domain/usecases/petition/GetPetitionsUse
 import { GetPetitionsByUserIdUseCase } from "../domain/usecases/petition/GetPetitionsByUserIdUseCase";
 import { SignPetitionUseCase } from "../domain/usecases/petition/SignPetitionUseCase";
 import { AddCommentUseCase } from "../domain/usecases/petition/AddCommentUseCase";
+import { AddTimelineEventUseCase } from "../domain/usecases/petition/AddTimelineEventUseCase";
+import { DeclareVictoryUseCase } from "../domain/usecases/petition/DeclareVictoryUseCase";
 
 const authRepository = new FirebaseAuthRepository();
 const petitionRepository = new FirebasePetitionRepository();
@@ -35,6 +37,8 @@ export const getPetitionsUseCase = new GetPetitionsUseCase(petitionRepository);
 export const getPetitionsByUserIdUseCase = new GetPetitionsByUserIdUseCase(petitionRepository);
 export const signPetitionUseCase = new SignPetitionUseCase(petitionRepository);
 export const addCommentUseCase = new AddCommentUseCase(petitionRepository);
+export const addTimelineEventUseCase = new AddTimelineEventUseCase(petitionRepository);
+export const declareVictoryUseCase = new DeclareVictoryUseCase(petitionRepository);
 
 export { authRepository, petitionRepository };
 export type { AuthRepository } from "../domain/repositories/AuthRepository";
