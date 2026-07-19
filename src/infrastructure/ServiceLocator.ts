@@ -7,6 +7,7 @@ import { GetCurrentUserUseCase } from "../domain/usecases/auth/GetCurrentUserUse
 import { SignInWithGoogleUseCase } from "../domain/usecases/auth/SignInWithGoogleUseCase";
 import { SignInWithFacebookUseCase } from "../domain/usecases/auth/SignInWithFacebookUseCase";
 import { UpdateUserProfileUseCase } from "../domain/usecases/auth/UpdateUserProfileUseCase";
+import { SendPasswordResetUseCase } from "../domain/usecases/auth/SendPasswordResetUseCase";
 import { CreatePetitionUseCase } from "../domain/usecases/petition/CreatePetitionUseCase";
 import { GetPetitionUseCase } from "../domain/usecases/petition/GetPetitionUseCase";
 import { GetPetitionsUseCase } from "../domain/usecases/petition/GetPetitionsUseCase";
@@ -23,6 +24,7 @@ export const getCurrentUserUseCase = new GetCurrentUserUseCase(authRepository);
 export const signInWithGoogleUseCase = new SignInWithGoogleUseCase(authRepository);
 export const signInWithFacebookUseCase = new SignInWithFacebookUseCase(authRepository);
 export const updateUserProfileUseCase = new UpdateUserProfileUseCase(authRepository);
+export const sendPasswordResetUseCase = new SendPasswordResetUseCase(authRepository);
 
 export const createPetitionUseCase = new CreatePetitionUseCase(petitionRepository);
 export const getPetitionUseCase = new GetPetitionUseCase(petitionRepository);

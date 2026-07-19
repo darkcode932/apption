@@ -12,6 +12,7 @@ import {
   signInWithPopup,
   AuthProvider,
   UserCredential,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
@@ -183,5 +184,9 @@ export class FirebaseAuthRepository implements AuthRepository {
   ): Promise<void> {
     const userDocRef = doc(db, "users", userId);
     await updateDoc(userDocRef, data);
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(auth, email);
   }
 }

@@ -31,4 +31,7 @@ export interface AuthRepository {
       avatarUrl?: string;
     }
   ): Promise<void>;
+
+  /** Send a password reset email via Firebase. */
+  sendPasswordReset(email: string): Promise<void>;
 }

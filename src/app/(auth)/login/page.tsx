@@ -199,12 +199,12 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-xs font-medium">
-                  <a
-                    href="#"
+                  <Link
+                    href="/forgot-password"
                     className="text-red-400 hover:text-green-400 transition-colors"
                   >
                     Mot de passe oublié ?
-                  </a>
+                  </Link>
                 </div>
               </div>
 
