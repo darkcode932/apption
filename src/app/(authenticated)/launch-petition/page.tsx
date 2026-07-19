@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HiArrowRight, HiArrowLeft, HiLocationMarker, HiCheck } from "react-icons/hi";
-import { FaCity, FaGlobeAfrica, FaWarehouse } from "react-icons/fa";
+import { HiArrowRight, HiArrowLeft, HiLocationMarker, HiCheck, HiSparkles, HiOutlineX, HiDocumentText } from "react-icons/hi";
+import { FaCity, FaGlobeAfrica, FaWarehouse, FaTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 import { createPetitionUseCase } from "../../../infrastructure/ServiceLocator";
 import ButtonClick from "../../components/ButtonClick";
@@ -26,6 +26,17 @@ const categories = [
   "Autres...",
 ];
 
+interface AICopilotResult {
+  optimizedTitle: string;
+  optimizedDescription: string;
+  suggestedTargets: string[];
+  socialKit: {
+    twitter: string;
+    facebook: string;
+    whatsapp: string;
+  };
+}
+
 export default function LaunchPetitionPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -41,11 +52,58 @@ export default function LaunchPetitionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // AI Copilot States
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiResult, setAiResult] = useState<AICopilotResult | null>(null);
+  const [showAiModal, setShowAiModal] = useState(false);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCallAiCopilot = async () => {
+    if (!title.trim() || !description.trim()) {
+      setError("Veuillez saisir un titre et une description avant d'appeler le copilote IA.");
+      return;
+    }
+    
+    setAiLoading(true);
+    setAiError(null);
+    setAiResult(null);
+    setShowAiModal(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/ai-copilot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, scale, category }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Une erreur est survenue lors de la génération.");
+      }
+      
+      setAiResult(data);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err?.message || "Impossible de se connecter au service d'IA.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleApplyAiSuggestions = () => {
+    if (aiResult) {
+      setTitle(aiResult.optimizedTitle);
+      setDescription(aiResult.optimizedDescription);
+      setShowAiModal(false);
     }
   };
 
@@ -202,13 +260,24 @@ export default function LaunchPetitionPage() {
         {/* Step 3: Title, Description, and Image */}
         {step === 2 && (
           <form className="space-y-6 flex-grow animate-fadeIn" onSubmit={handleFormSubmit}>
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Rédigez et publiez votre pétition
-              </h2>
-              <p className="text-neutral-400 font-light text-xs sm:text-sm">
-                Choisissez un titre percutant et décrivez clairement le changement que vous souhaitez obtenir.
-              </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
+                  Rédigez et publiez votre pétition
+                </h2>
+                <p className="text-neutral-450 font-light text-xs sm:text-sm">
+                  Choisissez un titre percutant et décrivez clairement le changement que vous souhaitez obtenir.
+                </p>
+              </div>
+              
+              <button
+                type="button"
+                onClick={handleCallAiCopilot}
+                className="flex items-center space-x-2 text-xs font-bold bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-neutral-950 px-4 py-2.5 rounded-xl transition-all self-end sm:self-center cursor-pointer shadow-md hover:shadow-green-500/10"
+              >
+                <HiSparkles className="text-sm" />
+                <span>Optimiser avec l&apos;IA ✨</span>
+              </button>
             </div>
 
             <div className="space-y-5 pt-2">
@@ -216,7 +285,7 @@ export default function LaunchPetitionPage() {
               <div className="relative rounded-2xl border border-white/5 px-4 py-2.5 bg-neutral-950/20 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500/10 transition-all">
                 <label
                   htmlFor="title"
-                  className="absolute -top-2 left-3 -mt-px inline-block bg-[#16161c] px-1.5 text-[10px] font-semibold text-green-455 text-green-400 uppercase tracking-wider"
+                  className="absolute -top-2 left-3 -mt-px inline-block bg-[#16161c] px-1.5 text-[10px] font-semibold text-green-400 uppercase tracking-wider"
                 >
                   Titre de la pétition
                 </label>
@@ -351,6 +420,138 @@ export default function LaunchPetitionPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Copilot Suggestions Modal */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0b0f]/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="glass-card max-w-3xl w-full rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col justify-between space-y-6">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center space-x-2 text-green-400">
+                <HiSparkles className="text-xl animate-pulse" />
+                <h3 className="text-lg font-extrabold text-white font-display">Copilote de Campagne IA</h3>
+              </div>
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="text-neutral-500 hover:text-white p-1 rounded-lg border border-transparent hover:border-white/5 transition-all cursor-pointer"
+              >
+                <HiOutlineX className="text-lg" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-grow overflow-y-auto space-y-6 pr-1 scrollbar-hidden">
+              {aiLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-450" />
+                  <p className="text-xs text-neutral-450 italic">Analyse de votre texte et rédaction en cours...</p>
+                </div>
+              ) : aiError ? (
+                <div className="p-4 rounded-xl border border-red-500/20 bg-red-950/20 text-red-400 text-xs flex items-center space-x-2">
+                  <HiOutlineX className="text-lg flex-shrink-0" />
+                  <span>{aiError}</span>
+                </div>
+              ) : aiResult ? (
+                <div className="space-y-6 animate-fadeIn text-sm">
+                  {/* Optimized Title */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Titre Suggéré</h4>
+                    <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 font-semibold text-white">
+                      {aiResult.optimizedTitle}
+                    </div>
+                  </div>
+
+                  {/* Optimized Description */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Description Suggérée</h4>
+                    <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 leading-relaxed text-neutral-300 font-light whitespace-pre-wrap">
+                      {aiResult.optimizedDescription}
+                    </div>
+                  </div>
+
+                  {/* Suggested Targets */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Décideurs Cibles Suggérés</h4>
+                    <div className="flex flex-wrap gap-2 pl-1">
+                      {aiResult.suggestedTargets.map((target, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-full"
+                        >
+                          {target}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social Share Kit */}
+                  <div className="space-y-3 pt-2 border-t border-white/5">
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Kit Réseaux Sociaux</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Twitter */}
+                      <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
+                        <div className="flex items-center space-x-2 text-[#1da1f2] font-semibold text-xs">
+                          <FaTwitter />
+                          <span>Twitter / X</span>
+                        </div>
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                          {aiResult.socialKit.twitter}
+                        </p>
+                      </div>
+
+                      {/* Facebook */}
+                      <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
+                        <div className="flex items-center space-x-2 text-[#1877f2] font-semibold text-xs">
+                          <FaFacebook />
+                          <span>Facebook</span>
+                        </div>
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                          {aiResult.socialKit.facebook}
+                        </p>
+                      </div>
+
+                      {/* WhatsApp */}
+                      <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
+                        <div className="flex items-center space-x-2 text-[#25d366] font-semibold text-xs">
+                          <FaWhatsapp />
+                          <span>WhatsApp</span>
+                        </div>
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                          {aiResult.socialKit.whatsapp}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-white/5 pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
+              >
+                Fermer
+              </button>
+              {aiResult && (
+                <button
+                  type="button"
+                  onClick={handleApplyAiSuggestions}
+                  className="flex items-center space-x-1.5 px-6 py-2.5 rounded-full bg-green-500 hover:bg-green-600 text-neutral-950 text-xs font-extrabold shadow-md hover:shadow-green-500/10 cursor-pointer"
+                >
+                  <HiCheck className="text-sm" />
+                  <span>Appliquer les suggestions</span>
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
