@@ -6,6 +6,11 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        "neutral-450": "#8a8a93",
+        "green-455": "#10b981",
+        "red-650": "#be123c",
+      },
       backgroundImage: {
         back1: 'url("/assets/images/bg_1.jpg")',
         back2: 'url("/assets/images/bg_2.jpg")',
@@ -20,12 +25,11 @@ module.exports = {
       }
     },
     screens: {
-      xs: { min: "270px", max: "485px" },
-      sm: { min: "576px" },
-      md: { min: "768px" },
-      lg: { min: "992px" },
-      xl: { min: "1200px" },
-      xxl: { min: "1600px" },
+      sm: "576px",
+      md: "768px",
+      lg: "992px",
+      xl: "1200px",
+      xxl: "1600px",
     },
   },
   plugins: [],
