@@ -1,0 +1,17 @@
+{
+  "standardUser": {
+    "email": "user3@apption.com",
+    "password": "password123",
+    "displayName": "Carine Mbarga",
+    "city": "Douala"
+  },
+  "admin": {
+    "email": "admin@apption.io",
+    "password": "Password123!"
+  },
+  "superAdmin": {
+    "email": "superadmin@apption.io",
+    "password": "Password123!"
+  },
+  "testPetitionId": "Ng5lBvn0ecbm8KUBrx37"
+}

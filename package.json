@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --browser chrome",
+    "cy:run:headed": "cypress run --browser chrome --headed"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -30,6 +33,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.13",
+    "cypress": "^15.18.1",
     "eslint": "^8.27.0",
     "eslint-config-next": "14.2.3",
     "postcss": "^8.4.19",

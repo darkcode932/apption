@@ -57,6 +57,15 @@ export default function LaunchPetitionPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<AICopilotResult | null>(null);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
+
+  const handleCopyText = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => {
+      setCopiedType(null);
+    }, 2000);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -495,33 +504,60 @@ export default function LaunchPetitionPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Twitter */}
                       <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
-                        <div className="flex items-center space-x-2 text-[#1da1f2] font-semibold text-xs">
-                          <FaTwitter />
-                          <span>Twitter / X</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 text-[#1da1f2] font-semibold text-xs">
+                            <FaTwitter />
+                            <span>Twitter / X</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(aiResult.socialKit.twitter, "twitter")}
+                            className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
+                          >
+                            {copiedType === "twitter" ? "Copié !" : "Copier"}
+                          </button>
                         </div>
-                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
                           {aiResult.socialKit.twitter}
                         </p>
                       </div>
 
                       {/* Facebook */}
                       <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
-                        <div className="flex items-center space-x-2 text-[#1877f2] font-semibold text-xs">
-                          <FaFacebook />
-                          <span>Facebook</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 text-[#1877f2] font-semibold text-xs">
+                            <FaFacebook />
+                            <span>Facebook</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(aiResult.socialKit.facebook, "facebook")}
+                            className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
+                          >
+                            {copiedType === "facebook" ? "Copié !" : "Copier"}
+                          </button>
                         </div>
-                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
                           {aiResult.socialKit.facebook}
                         </p>
                       </div>
 
                       {/* WhatsApp */}
                       <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
-                        <div className="flex items-center space-x-2 text-[#25d366] font-semibold text-xs">
-                          <FaWhatsapp />
-                          <span>WhatsApp</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 text-[#25d366] font-semibold text-xs">
+                            <FaWhatsapp />
+                            <span>WhatsApp</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(aiResult.socialKit.whatsapp, "whatsapp")}
+                            className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
+                          >
+                            {copiedType === "whatsapp" ? "Copié !" : "Copier"}
+                          </button>
                         </div>
-                        <p className="text-neutral-400 text-xs font-light select-all leading-normal">
+                        <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
                           {aiResult.socialKit.whatsapp}
                         </p>
                       </div>

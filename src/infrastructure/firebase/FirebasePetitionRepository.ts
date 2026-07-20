@@ -503,8 +503,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
     const notificationsCol = collection(db, "notifications");
     const q = query(
       notificationsCol,
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
     );
     const snapshot = await getDocs(q);
     const notifs: Notification[] = [];
@@ -527,6 +526,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
         createdAt: rawDate,
       });
     });
+    // In-memory sort to avoid index requirement
+    notifs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return notifs;
   }
 
@@ -594,8 +595,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
     const notificationsCol = collection(db, "notifications");
     const q = query(
       notificationsCol,
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
     );
 
     const unsubscribe = onSnapshot(
@@ -621,6 +621,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
             createdAt: rawDate,
           });
         });
+        // In-memory sort to avoid index requirement
+        notifs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         callback(notifs);
       },
       (error) => {

@@ -264,8 +264,13 @@ export default function ProfilePage() {
             <div className="flex-1 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div>
-                  <h1 className="text-3xl font-extrabold text-white font-display">
-                    {user.firstname} {user.lastname}
+                  <h1 className="text-3xl font-extrabold text-white font-display flex items-center space-x-2">
+                    <span>{user.firstname} {user.lastname}</span>
+                    {user.isVerified && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                        Certifié {user.officialTitle ? `- ${user.officialTitle}` : ""}
+                      </span>
+                    )}
                   </h1>
                   <p className="text-sm text-green-400 font-semibold font-mono mt-0.5">@{user.username}</p>
                 </div>
@@ -292,12 +297,16 @@ export default function ProfilePage() {
                   <HiUser className="text-green-500 text-sm" />
                   <span>{user.email}</span>
                 </span>
-                {user.location && (
+                {(user.location || user.city) && (
                   <span className="flex items-center space-x-1.5">
                     <HiLocationMarker className="text-green-500 text-sm" />
-                    <span>{user.location}</span>
+                    <span>{user.location || user.city}</span>
                   </span>
                 )}
+                <span className="flex items-center space-x-1.5">
+                  <HiBriefcase className="text-green-500 text-sm" />
+                  <span>Membre depuis 2026</span>
+                </span>
               </div>
             </div>
           </div>

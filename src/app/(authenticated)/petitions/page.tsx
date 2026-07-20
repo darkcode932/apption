@@ -72,6 +72,9 @@ export default function PetitionsListPage() {
             return false;
           }
         } else if (pet.scale === "Ville") {
+          if (!user.city && (!user.latitude || !user.longitude)) {
+            return true; // Fallback if user coordinates/city are not fully resolved yet
+          }
           const sameCity = user.city && pet.city && user.city.toLowerCase() === pet.city.toLowerCase();
           let withinRadius = false;
           if (user.latitude && user.longitude && pet.latitude && pet.longitude) {

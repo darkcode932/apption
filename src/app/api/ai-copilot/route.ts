@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     // Initialize Google Gen AI
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-3.1-flash-lite",
       generationConfig: { responseMimeType: "application/json" },
     });
 
@@ -57,7 +57,18 @@ Génère une réponse JSON stricte qui respecte exactement la structure suivante
     const textResponse = result.response.text();
     
     // Parse response to ensure validity
-    const parsedData = JSON.parse(textResponse);
+    let cleanedText = textResponse.trim();
+    if (cleanedText.startsWith("```json")) {
+      cleanedText = cleanedText.substring(7);
+    } else if (cleanedText.startsWith("```")) {
+      cleanedText = cleanedText.substring(3);
+    }
+    if (cleanedText.endsWith("```")) {
+      cleanedText = cleanedText.substring(0, cleanedText.length - 3);
+    }
+    cleanedText = cleanedText.trim();
+
+    const parsedData = JSON.parse(cleanedText);
 
     return NextResponse.json(parsedData);
   } catch (error: any) {
