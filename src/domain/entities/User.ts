@@ -13,4 +13,5 @@ export interface User {
   longitude?: number;
   country?: string;
   city?: string;
+  role?: "user" | "admin" | "super_admin";
 }

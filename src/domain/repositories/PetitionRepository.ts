@@ -88,4 +88,10 @@ export interface PetitionRepository {
 
   /** Mark a notification as read. */
   markNotificationRead(notificationId: string): Promise<void>;
+
+  /** Moderation: delete a petition from Firestore (Admin / Super Admin only). */
+  deletePetition(petitionId: string): Promise<void>;
+
+  /** Moderation: toggle feature status for a petition (Admin / Super Admin only). */
+  updatePetitionFeatured(petitionId: string, isFeatured: boolean): Promise<void>;
 }

@@ -17,30 +17,52 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
+    // Helper function: check if user is an admin or super admin
+    function isAdmin() {
+      return isLoggedIn() && (
+        getUserData().role == 'admin' || 
+        getUserData().role == 'super_admin'
+      );
+    }
+
+    // Helper function: check if user is a super admin
+    function isSuperAdmin() {
+      return isLoggedIn() && getUserData().role == 'super_admin';
+    }
+
     // 1. Users Collection Rules
     match /users/{userId} {
       allow read: if isLoggedIn();
-      allow create: if isLoggedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false; // profiles cannot be deleted directly
+      // Users cannot sign up directly as admins
+      allow create: if isLoggedIn() && request.auth.uid == userId && (
+        !request.resource.data.keys().contains('role') || request.resource.data.role == 'user'
+      );
+      // Only owner can update profile (except role), but Super Admin can update anything (including role)
+      allow update: if (isOwner(userId) && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+      )) || isSuperAdmin();
+      allow delete: if false;
     }
 
     // 2. Petitions Collection Rules
     match /petition/{petitionId} {
       allow read: if true;
       allow create: if isLoggedIn();
-      // Allow signing increments or viewing updates if logged in, but only creator can edit core details or status
+      // Creator or Admin can update status, description or moderation flags (like isFeatured)
       allow update: if isLoggedIn() && (
         request.resource.data.status == resource.data.status || 
-        resource.data.createdBy == request.auth.uid
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
       );
-      allow delete: if isLoggedIn() && resource.data.createdBy == request.auth.uid;
+      // Creator or Admin can delete petition
+      allow delete: if isLoggedIn() && (resource.data.createdBy == request.auth.uid || isAdmin());
 
       // 3. Comments subcollection
       match /comments/{commentId} {
         allow read: if true;
         allow create: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
+        allow update: if isLoggedIn() && resource.data.userId == request.auth.uid;
+        allow delete: if isLoggedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       }
 
       // 4. Timeline subcollection
@@ -49,9 +71,10 @@ service cloud.firestore {
         // Only creator or verified official accounts can post updates
         allow create: if isLoggedIn() && (
           get(/databases/$(database)/documents/petition/$(petitionId)).data.createdBy == request.auth.uid ||
-          getUserData().isVerified == true
+          getUserData().isVerified == true ||
+          isAdmin()
         );
-        allow update, delete: if isLoggedIn() && resource.data.authorId == request.auth.uid;
+        allow update, delete: if isLoggedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
       }
 
       // 5. Signatures subcollection

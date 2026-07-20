@@ -91,8 +91,12 @@ export default function HomePage() {
   };
 
   const filteredPetitions = getFilteredPetitions();
-  const highlightPetition = filteredPetitions.length > 0 ? filteredPetitions[0] : null;
-  const gridPetitions = filteredPetitions.length > 1 ? filteredPetitions.slice(1, 4) : [];
+  const highlightPetition =
+    filteredPetitions.find((p) => p.isFeatured) ||
+    (filteredPetitions.length > 0 ? filteredPetitions[0] : null);
+  const gridPetitions = filteredPetitions
+    .filter((p) => p.id !== highlightPetition?.id)
+    .slice(0, 3);
 
   return (
     <div className="flex flex-col py-10 space-y-12 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative overflow-hidden">

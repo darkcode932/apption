@@ -9,6 +9,9 @@ import { SignInWithFacebookUseCase } from "../domain/usecases/auth/SignInWithFac
 import { UpdateUserProfileUseCase } from "../domain/usecases/auth/UpdateUserProfileUseCase";
 import { SendPasswordResetUseCase } from "../domain/usecases/auth/SendPasswordResetUseCase";
 import { UploadAvatarUseCase } from "../domain/usecases/auth/UploadAvatarUseCase";
+import { GetAllUsersUseCase } from "../domain/usecases/auth/GetAllUsersUseCase";
+import { UpdateUserRoleUseCase } from "../domain/usecases/auth/UpdateUserRoleUseCase";
+import { SetUserVerificationUseCase } from "../domain/usecases/auth/SetUserVerificationUseCase";
 import { CreatePetitionUseCase } from "../domain/usecases/petition/CreatePetitionUseCase";
 import { GetPetitionUseCase } from "../domain/usecases/petition/GetPetitionUseCase";
 import { GetPetitionsUseCase } from "../domain/usecases/petition/GetPetitionsUseCase";
@@ -17,6 +20,8 @@ import { SignPetitionUseCase } from "../domain/usecases/petition/SignPetitionUse
 import { AddCommentUseCase } from "../domain/usecases/petition/AddCommentUseCase";
 import { AddTimelineEventUseCase } from "../domain/usecases/petition/AddTimelineEventUseCase";
 import { DeclareVictoryUseCase } from "../domain/usecases/petition/DeclareVictoryUseCase";
+import { DeletePetitionUseCase } from "../domain/usecases/petition/DeletePetitionUseCase";
+import { UpdatePetitionFeaturedUseCase } from "../domain/usecases/petition/UpdatePetitionFeaturedUseCase";
 
 const authRepository = new FirebaseAuthRepository();
 const petitionRepository = new FirebasePetitionRepository();
@@ -30,6 +35,9 @@ export const signInWithFacebookUseCase = new SignInWithFacebookUseCase(authRepos
 export const updateUserProfileUseCase = new UpdateUserProfileUseCase(authRepository);
 export const sendPasswordResetUseCase = new SendPasswordResetUseCase(authRepository);
 export const uploadAvatarUseCase = new UploadAvatarUseCase(authRepository);
+export const getAllUsersUseCase = new GetAllUsersUseCase(authRepository);
+export const updateUserRoleUseCase = new UpdateUserRoleUseCase(authRepository);
+export const setUserVerificationUseCase = new SetUserVerificationUseCase(authRepository);
 
 export const createPetitionUseCase = new CreatePetitionUseCase(petitionRepository);
 export const getPetitionUseCase = new GetPetitionUseCase(petitionRepository);
@@ -39,6 +47,8 @@ export const signPetitionUseCase = new SignPetitionUseCase(petitionRepository);
 export const addCommentUseCase = new AddCommentUseCase(petitionRepository);
 export const addTimelineEventUseCase = new AddTimelineEventUseCase(petitionRepository);
 export const declareVictoryUseCase = new DeclareVictoryUseCase(petitionRepository);
+export const deletePetitionUseCase = new DeletePetitionUseCase(petitionRepository);
+export const updatePetitionFeaturedUseCase = new UpdatePetitionFeaturedUseCase(petitionRepository);
 
 export { authRepository, petitionRepository };
 export type { AuthRepository } from "../domain/repositories/AuthRepository";

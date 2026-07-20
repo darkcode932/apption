@@ -6,15 +6,15 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
-  updateProfile,
   GoogleAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
-  AuthProvider,
   UserCredential,
+  AuthProvider,
+  updateProfile,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebaseAuthRepository implements AuthRepository {
@@ -32,6 +32,13 @@ export class FirebaseAuthRepository implements AuthRepository {
         bio: data.bio || "",
         location: data.location || "",
         avatarUrl: data.avatarUrl || "",
+        isVerified: !!data.isVerified,
+        officialTitle: data.officialTitle || "",
+        latitude: data.latitude !== undefined ? data.latitude : undefined,
+        longitude: data.longitude !== undefined ? data.longitude : undefined,
+        country: data.country || "",
+        city: data.city || "",
+        role: data.role || "user",
       };
     }
     return {
@@ -43,6 +50,9 @@ export class FirebaseAuthRepository implements AuthRepository {
       bio: "",
       location: "",
       avatarUrl: "",
+      isVerified: false,
+      officialTitle: "",
+      role: "user",
     };
   }
 
@@ -79,11 +89,14 @@ export class FirebaseAuthRepository implements AuthRepository {
         avatarUrl,
         bio: "",
         location: "",
+        isVerified: false,
+        officialTitle: "",
+        role: "user",
         createdAt: new Date(),
         provider: (provider as any).providerId || "social",
       });
 
-      return { id: uid, email, firstname, lastname, username, bio: "", location: "", avatarUrl };
+      return { id: uid, email, firstname, lastname, username, bio: "", location: "", avatarUrl, isVerified: false, officialTitle: "", role: "user" };
     }
 
     return this.fetchUserData(uid, email);
@@ -118,6 +131,9 @@ export class FirebaseAuthRepository implements AuthRepository {
       bio: "",
       location: "",
       avatarUrl: "",
+      isVerified: false,
+      officialTitle: "",
+      role: "user",
       createdAt: new Date(),
     });
 
@@ -130,6 +146,9 @@ export class FirebaseAuthRepository implements AuthRepository {
       bio: "",
       location: "",
       avatarUrl: "",
+      isVerified: false,
+      officialTitle: "",
+      role: "user",
     };
   }
 
@@ -185,6 +204,7 @@ export class FirebaseAuthRepository implements AuthRepository {
       longitude?: number;
       country?: string;
       city?: string;
+      role?: "user" | "admin" | "super_admin";
     }
   ): Promise<void> {
     const userDocRef = doc(db, "users", userId);
@@ -199,5 +219,52 @@ export class FirebaseAuthRepository implements AuthRepository {
     const storageRef = ref(storage, `avatars/${userId}_${Date.now()}`);
     const snapshot = await uploadBytes(storageRef, imageFile);
     return getDownloadURL(snapshot.ref);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const usersCol = collection(db, "users");
+    const snapshot = await getDocs(usersCol);
+    const users: User[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      users.push({
+        id: doc.id,
+        email: data.email || "",
+        firstname: data.firstname || "",
+        lastname: data.lastname || "",
+        username: data.username || "",
+        bio: data.bio || "",
+        location: data.location || "",
+        avatarUrl: data.avatarUrl || "",
+        isVerified: !!data.isVerified,
+        officialTitle: data.officialTitle || "",
+        latitude: data.latitude !== undefined ? data.latitude : undefined,
+        longitude: data.longitude !== undefined ? data.longitude : undefined,
+        country: data.country || "",
+        city: data.city || "",
+        role: data.role || "user",
+      });
+    });
+    return users;
+  }
+
+  async updateUserRole(
+    targetUserId: string,
+    newRole: "user" | "admin" | "super_admin"
+  ): Promise<void> {
+    const userDocRef = doc(db, "users", targetUserId);
+    await updateDoc(userDocRef, { role: newRole });
+  }
+
+  async setUserVerification(
+    targetUserId: string,
+    isVerified: boolean,
+    officialTitle?: string
+  ): Promise<void> {
+    const userDocRef = doc(db, "users", targetUserId);
+    await updateDoc(userDocRef, {
+      isVerified,
+      officialTitle: officialTitle || "",
+    });
   }
 }

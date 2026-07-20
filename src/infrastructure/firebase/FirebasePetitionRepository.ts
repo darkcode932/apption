@@ -16,6 +16,7 @@ import {
   where,
   orderBy,
   updateDoc,
+  deleteDoc,
   arrayUnion,
   increment,
   Timestamp,
@@ -55,6 +56,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
       longitude: data.longitude !== undefined ? data.longitude : 0,
       country: data.country || "",
       city: data.city || "",
+      isFeatured: !!data.isFeatured,
     };
   }
 
@@ -112,6 +114,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
       longitude: longitude || 0,
       country: country || "",
       city: city || "",
+      isFeatured: false,
     };
 
     const docRef = await addDoc(collection(db, "petition"), petitionData);
@@ -480,5 +483,15 @@ export class FirebasePetitionRepository implements PetitionRepository {
     await updateDoc(notifDocRef, {
       read: true,
     });
+  }
+
+  async deletePetition(petitionId: string): Promise<void> {
+    const docRef = doc(db, "petition", petitionId);
+    await deleteDoc(docRef);
+  }
+
+  async updatePetitionFeatured(petitionId: string, isFeatured: boolean): Promise<void> {
+    const docRef = doc(db, "petition", petitionId);
+    await updateDoc(docRef, { isFeatured });
   }
 }

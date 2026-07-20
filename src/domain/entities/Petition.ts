@@ -18,4 +18,5 @@ export interface Petition {
   longitude?: number;
   country?: string;
   city?: string;
+  isFeatured?: boolean;
 }

@@ -33,6 +33,7 @@ export interface AuthRepository {
       longitude?: number;
       country?: string;
       city?: string;
+      role?: "user" | "admin" | "super_admin";
     }
   ): Promise<void>;
 
@@ -41,4 +42,20 @@ export interface AuthRepository {
 
   /** Upload an avatar picture to Firebase Storage and return the URL. */
   uploadAvatar(userId: string, imageFile: File): Promise<string>;
+
+  /** Retrieve all users in the system (Admin only). */
+  getAllUsers(): Promise<User[]>;
+
+  /** Change a user's role (Super Admin only). */
+  updateUserRole(
+    targetUserId: string,
+    newRole: "user" | "admin" | "super_admin"
+  ): Promise<void>;
+
+  /** Mark a user as verified with an optional official title (Admin / Super Admin only). */
+  setUserVerification(
+    targetUserId: string,
+    isVerified: boolean,
+    officialTitle?: string
+  ): Promise<void>;
 }
