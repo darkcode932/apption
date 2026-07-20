@@ -161,6 +161,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
   /**
    * Sign a petition using a Firestore transaction to prevent duplicate signatures.
    * Atomically records the signature inside the '/signatures' subcollection and increments the petition document count.
+   * Dispatches milestone notifications to the creator atomically if thresholds are met.
    */
   async signPetition(
     petitionId: string,
@@ -185,6 +186,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
         throw new Error("Vous avez déjà signé cette pétition.");
       }
 
+      const nextCount = (data.signaturesCount || 0) + 1;
+
       // Add signature record to subcollection atomically
       const signatureDocRef = doc(collection(docRef, "signatures"));
       transaction.set(signatureDocRef, {
@@ -202,6 +205,22 @@ export class FirebasePetitionRepository implements PetitionRepository {
         signatureNames: arrayUnion(userName),
         signaturesCount: increment(1),
       });
+
+      // Dispatch signature milestone notification atomically
+      const milestones = [5, 10, 20, 50, 100, 250, 500, 1000, 5000];
+      if (milestones.includes(nextCount)) {
+        const creatorId = data.createdBy;
+        const notifDocRef = doc(collection(db, "notifications"));
+        transaction.set(notifDocRef, {
+          userId: creatorId,
+          title: "Palier atteint ! 🚀",
+          message: `Votre pétition "${data.title}" a recueilli ${nextCount} signatures !`,
+          type: "milestone",
+          petitionId: petitionId,
+          read: false,
+          createdAt: Timestamp.now(),
+        });
+      }
     });
   }
 
@@ -330,6 +349,23 @@ export class FirebasePetitionRepository implements PetitionRepository {
     const petitionDocRef = doc(db, "petition", petitionId);
     const timelineColRef = collection(petitionDocRef, "timeline");
     const docRef = await addDoc(timelineColRef, eventData);
+
+    // Auto-dispatch notifications to all signers
+    try {
+      const petition = await this.getPetitionById(petitionId);
+      if (petition) {
+        const signers = petition.signatureUserIds || [];
+        const title = `Mise à jour : ${petition.title}`;
+        const message = `${event.authorName} a publié un nouveau jalon de négociation : "${event.title}".`;
+        const notifyPromises = signers
+          .filter((uid) => uid !== event.authorId)
+          .map((uid) => this.createNotification(uid, title, message, "milestone", petitionId));
+        await Promise.all(notifyPromises);
+      }
+    } catch (e) {
+      console.warn("Failed to dispatch timeline notifications:", e);
+    }
+
     return {
       id: docRef.id,
       ...event,
@@ -389,6 +425,22 @@ export class FirebasePetitionRepository implements PetitionRepository {
     await updateDoc(docRef, {
       status: "victory",
     });
+
+    // Auto-dispatch victory notifications to all signers
+    try {
+      const petition = await this.getPetitionById(petitionId);
+      if (petition) {
+        const signers = petition.signatureUserIds || [];
+        const title = `Victoire ! 🎉 : ${petition.title}`;
+        const message = `Félicitations ! La pétition "${petition.title}" a été déclarée victorieuse par son créateur.`;
+        const notifyPromises = signers
+          .filter((uid) => uid !== petition.createdBy)
+          .map((uid) => this.createNotification(uid, title, message, "victory", petitionId));
+        await Promise.all(notifyPromises);
+      }
+    } catch (e) {
+      console.warn("Failed to dispatch victory notifications:", e);
+    }
   }
 
   async getSignatures(petitionId: string): Promise<Signature[]> {
@@ -493,5 +545,109 @@ export class FirebasePetitionRepository implements PetitionRepository {
   async updatePetitionFeatured(petitionId: string, isFeatured: boolean): Promise<void> {
     const docRef = doc(db, "petition", petitionId);
     await updateDoc(docRef, { isFeatured });
+  }
+
+  onSignaturesSnapshot(
+    petitionId: string,
+    callback: (signatures: Signature[]) => void
+  ): () => void {
+    const signatureCol = collection(db, "petition", petitionId, "signatures");
+    const q = query(signatureCol, orderBy("signedAt", "desc"));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const sigs: Signature[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          let rawDate = new Date();
+          if (data.signedAt && typeof data.signedAt.toDate === "function") {
+            rawDate = data.signedAt.toDate();
+          } else if (data.signedAt) {
+            rawDate = new Date(data.signedAt);
+          }
+          sigs.push({
+            id: doc.id,
+            userId: data.userId || "",
+            userName: data.userName || "",
+            signedAt: rawDate,
+            reason: data.reason || "",
+            city: data.city || "",
+            country: data.country || "",
+          });
+        });
+        callback(sigs);
+      },
+      (error) => {
+        console.error("Signatures snapshot error:", error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  onNotificationsSnapshot(
+    userId: string,
+    callback: (notifications: Notification[]) => void
+  ): () => void {
+    const notificationsCol = collection(db, "notifications");
+    const q = query(
+      notificationsCol,
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const notifs: Notification[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          let rawDate = new Date();
+          if (data.createdAt && typeof data.createdAt.toDate === "function") {
+            rawDate = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            rawDate = new Date(data.createdAt);
+          }
+          notifs.push({
+            id: doc.id,
+            userId: data.userId || "",
+            title: data.title || "",
+            message: data.message || "",
+            type: data.type || "milestone",
+            petitionId: data.petitionId || "",
+            read: !!data.read,
+            createdAt: rawDate,
+          });
+        });
+        callback(notifs);
+      },
+      (error) => {
+        console.error("Notifications snapshot error:", error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  async createNotification(
+    userId: string,
+    title: string,
+    message: string,
+    type: string,
+    petitionId: string
+  ): Promise<void> {
+    const notifData = {
+      userId,
+      title,
+      message,
+      type,
+      petitionId,
+      read: false,
+      createdAt: Timestamp.now(),
+    };
+    await addDoc(collection(db, "notifications"), notifData);
   }
 }

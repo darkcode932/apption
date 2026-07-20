@@ -94,4 +94,25 @@ export interface PetitionRepository {
 
   /** Moderation: toggle feature status for a petition (Admin / Super Admin only). */
   updatePetitionFeatured(petitionId: string, isFeatured: boolean): Promise<void>;
+
+  /** Subscribe to real-time updates for signatories list. */
+  onSignaturesSnapshot(
+    petitionId: string,
+    callback: (signatures: Signature[]) => void
+  ): () => void;
+
+  /** Subscribe to real-time notifications updates for a user. */
+  onNotificationsSnapshot(
+    userId: string,
+    callback: (notifications: Notification[]) => void
+  ): () => void;
+
+  /** Create a notification document in the global notifications collection. */
+  createNotification(
+    userId: string,
+    title: string,
+    message: string,
+    type: string,
+    petitionId: string
+  ): Promise<void>;
 }

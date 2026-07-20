@@ -14,7 +14,7 @@ import {
   updateProfile,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebaseAuthRepository implements AuthRepository {
@@ -266,5 +266,20 @@ export class FirebaseAuthRepository implements AuthRepository {
       isVerified,
       officialTitle: officialTitle || "",
     });
+
+    if (isVerified) {
+      const notifData = {
+        userId: targetUserId,
+        title: "Profil Certifié ! 🌟",
+        message: `Félicitations, votre profil a été certifié comme compte officiel : "${officialTitle || "Décideur"}".`,
+        type: "milestone",
+        petitionId: "",
+        read: false,
+        createdAt: Timestamp.now(),
+      };
+      await addDoc(collection(db, "notifications"), notifData).catch((err) =>
+        console.warn("Failed to create verification notification:", err)
+      );
+    }
   }
 }

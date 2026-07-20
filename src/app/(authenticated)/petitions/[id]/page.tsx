@@ -25,6 +25,7 @@ import { Petition } from "../../../../domain/entities/Petition";
 import { Input } from "../../../components/Input";
 import { Comment } from "../../../../domain/entities/Comment";
 import { TimelineEvent } from "../../../../domain/entities/TimelineEvent";
+import { Signature } from "../../../../domain/entities/Signature";
 import ButtonClick from "../../../components/ButtonClick";
 
 export default function PetitionDetailsPage() {
@@ -45,7 +46,12 @@ export default function PetitionDetailsPage() {
   const [viewIncremented, setViewIncremented] = useState(false);
   
   // Tab State
-  const [activeLeftTab, setActiveLeftTab] = useState<"discussion" | "timeline">("discussion");
+  const [activeLeftTab, setActiveLeftTab] = useState<"discussion" | "timeline" | "signatures">(
+    "discussion"
+  );
+  const [signatures, setSignatures] = useState<Signature[]>([]);
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [signReason, setSignReason] = useState("");
 
   // Comment states
   const [commentText, setCommentText] = useState("");
@@ -100,6 +106,17 @@ export default function PetitionDetailsPage() {
     return () => unsubscribe();
   }, [id]);
 
+  // Real-time listener for signatures list
+  useEffect(() => {
+    if (!id) return;
+
+    const unsubscribe = petitionRepository.onSignaturesSnapshot(id, (data) => {
+      setSignatures(data);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
+
   // Increment views once when petition first loads
   useEffect(() => {
     if (petition && !viewIncremented) {
@@ -108,13 +125,25 @@ export default function PetitionDetailsPage() {
     }
   }, [petition, viewIncremented, id]);
 
-  const handleSign = async () => {
+  const handleSign = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!user || !petition) return;
     setSigning(true);
     setSignError(null);
     try {
       const displayName = user.username || `${user.firstname} ${user.lastname}`;
-      await signPetitionUseCase.execute(petition.id, user.id, displayName);
+      const userCity = user.city || "";
+      const userCountry = user.country || "";
+      await signPetitionUseCase.execute(
+        petition.id,
+        user.id,
+        displayName,
+        signReason.trim() || undefined,
+        userCity || undefined,
+        userCountry || undefined
+      );
+      setShowSignModal(false);
+      setSignReason("");
     } catch (err: any) {
       console.error("Signing error:", err);
       setSignError(err?.message || "Une erreur est survenue lors de la signature.");
@@ -382,6 +411,16 @@ export default function PetitionDetailsPage() {
             >
               Fil de Négociation ({timelineEvents.length})
             </button>
+            <button
+              onClick={() => setActiveLeftTab("signatures")}
+              className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs font-display ${
+                activeLeftTab === "signatures"
+                  ? "border-green-500 text-green-400 font-extrabold"
+                  : "border-transparent text-neutral-500 hover:text-neutral-350"
+              }`}
+            >
+              Signataires ({signatures.length})
+            </button>
           </div>
 
           {/* TAB 1: Discussion Thread */}
@@ -592,6 +631,54 @@ export default function PetitionDetailsPage() {
             </div>
           )}
 
+          {/* TAB 3: Signatures List */}
+          {activeLeftTab === "signatures" && (
+            <div className="flex flex-col space-y-6 animate-fadeIn">
+              <div className="space-y-4">
+                {signatures.map((sig) => (
+                  <div key={sig.id} className="glass-card p-5 rounded-2xl border border-white/5 flex items-start space-x-3.5 animate-fadeIn">
+                    <div className="h-8 w-8 rounded-full bg-neutral-900/60 flex items-center justify-center text-[10px] text-green-455 border border-white/5 font-bold uppercase flex-shrink-0">
+                      {sig.userName.charAt(0)}
+                    </div>
+                    <div className="flex-grow space-y-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <p className="text-xs font-bold text-white truncate font-display">
+                            {sig.userName}
+                          </p>
+                          {(sig.city || sig.country) && (
+                            <span className="px-2 py-0.5 bg-neutral-950 border border-white/5 text-[9px] text-neutral-450 rounded-full font-light">
+                              📍 {sig.city ? `${sig.city}, ` : ""}{sig.country}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-neutral-500">
+                          {sig.signedAt.toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      {sig.reason && (
+                        <p className="text-neutral-350 text-xs italic font-light leading-relaxed pl-1 pt-1 border-l-2 border-green-500/30 mt-1">
+                          &ldquo;{sig.reason}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {signatures.length === 0 && (
+                  <div className="text-center py-10 glass-card rounded-2xl border border-white/5 text-neutral-500 text-xs italic">
+                    Aucun signataire pour le moment.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Side: Signatures & Sidebar */}
@@ -633,7 +720,7 @@ export default function PetitionDetailsPage() {
                 text={signing ? "Signature..." : "Soutenir cette cause"}
                 classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 font-extrabold text-sm justify-center w-full py-3.5 shadow-lg shadow-green-950/20 transition-all"
                 classArrow="hidden"
-                onClick={handleSign}
+                onClick={() => setShowSignModal(true)}
                 disabled={signing || isVictory}
               />
             )}
@@ -672,6 +759,66 @@ export default function PetitionDetailsPage() {
         </div>
 
       </div>
+
+      {/* Signature Reason Modal */}
+      {showSignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0b0f]/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <form
+            onSubmit={handleSign}
+            className="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-5"
+          >
+            <div className="flex items-center space-x-2 text-green-400">
+              <HiSparkles className="text-2xl animate-pulse" />
+              <h3 className="text-lg font-extrabold text-white font-display">Soutenir cette cause</h3>
+            </div>
+
+            <div className="text-xs text-neutral-400 font-light leading-relaxed space-y-2">
+              <p>Vous vous apprêtez à signer la pétition : <span className="font-bold text-white">&ldquo;{petition.title}&rdquo;</span>.</p>
+              {user && (user.city || user.country) && (
+                <div className="flex items-center space-x-1 text-green-455 font-semibold">
+                  <span>📍 Position : {user.city ? `${user.city}, ` : ""}{user.country}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="reason" className="block mb-2 text-xs font-semibold text-neutral-350 pl-1">
+                Pourquoi signez-vous ? (optionnel)
+              </label>
+              <textarea
+                id="reason"
+                rows={4}
+                placeholder="Ex: Je soutiens cette initiative car il est temps de faire bouger les choses..."
+                value={signReason}
+                onChange={(e) => setSignReason(e.target.value)}
+                disabled={signing}
+                className="block w-full px-4 py-3 rounded-2xl border border-white/5 bg-neutral-950/30 text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 text-xs sm:text-sm resize-none transition-all"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSignModal(false);
+                  setSignReason("");
+                }}
+                className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
+                disabled={signing}
+              >
+                Annuler
+              </button>
+              <ButtonClick
+                text={signing ? "Validation..." : "Confirmer ma signature"}
+                classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 text-xs font-extrabold shadow-md"
+                classArrow="hidden"
+                type="submit"
+                disabled={signing}
+              />
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
