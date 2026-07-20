@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
@@ -25,6 +25,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("apption_remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSetPasswordShow = () => {
     setPasswordShow(!passwordShow);
@@ -37,6 +46,13 @@ export default function LoginPage() {
 
     try {
       await signInUseCase.execute(email, password);
+      
+      if (rememberMe) {
+        localStorage.setItem("apption_remembered_email", email);
+      } else {
+        localStorage.removeItem("apption_remembered_email");
+      }
+
       router.push("/home");
     } catch (err: any) {
       console.error(err);
@@ -190,6 +206,8 @@ export default function LoginPage() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 rounded border-neutral-800 bg-neutral-950 text-green-500 focus:ring-green-500/20"
                   />
                   <label
