@@ -2,6 +2,9 @@ import { PetitionRepository } from "../../domain/repositories/PetitionRepository
 import { Petition } from "../../domain/entities/Petition";
 import { Comment } from "../../domain/entities/Comment";
 import { TimelineEvent } from "../../domain/entities/TimelineEvent";
+import { Signature } from "../../domain/entities/Signature";
+import { Notification } from "../../domain/entities/Notification";
+import { Donation } from "../../domain/entities/Donation";
 import { db, storage } from "./firebaseConfig";
 import {
   collection,
@@ -154,9 +157,16 @@ export class FirebasePetitionRepository implements PetitionRepository {
 
   /**
    * Sign a petition using a Firestore transaction to prevent duplicate signatures.
-   * Throws an error if the user has already signed.
+   * Atomically records the signature inside the '/signatures' subcollection and increments the petition document count.
    */
-  async signPetition(petitionId: string, userId: string, userName: string): Promise<void> {
+  async signPetition(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    reason?: string,
+    city?: string,
+    country?: string
+  ): Promise<void> {
     const docRef = doc(db, "petition", petitionId);
 
     await runTransaction(db, async (transaction) => {
@@ -172,6 +182,18 @@ export class FirebasePetitionRepository implements PetitionRepository {
         throw new Error("Vous avez déjà signé cette pétition.");
       }
 
+      // Add signature record to subcollection atomically
+      const signatureDocRef = doc(collection(docRef, "signatures"));
+      transaction.set(signatureDocRef, {
+        userId,
+        userName,
+        signedAt: Timestamp.now(),
+        reason: reason || "",
+        city: city || "",
+        country: country || "",
+      });
+
+      // Update parent petition arrays and counter
       transaction.update(docRef, {
         signatureUserIds: arrayUnion(userId),
         signatureNames: arrayUnion(userName),
@@ -363,6 +385,100 @@ export class FirebasePetitionRepository implements PetitionRepository {
     const docRef = doc(db, "petition", petitionId);
     await updateDoc(docRef, {
       status: "victory",
+    });
+  }
+
+  async getSignatures(petitionId: string): Promise<Signature[]> {
+    const signatureCol = collection(db, "petition", petitionId, "signatures");
+    const q = query(signatureCol, orderBy("signedAt", "desc"));
+    const snapshot = await getDocs(q);
+    const sigs: Signature[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      let rawDate = new Date();
+      if (data.signedAt && typeof data.signedAt.toDate === "function") {
+        rawDate = data.signedAt.toDate();
+      } else if (data.signedAt) {
+        rawDate = new Date(data.signedAt);
+      }
+      sigs.push({
+        id: doc.id,
+        userId: data.userId || "",
+        userName: data.userName || "",
+        signedAt: rawDate,
+        reason: data.reason || "",
+        city: data.city || "",
+        country: data.country || "",
+      });
+    });
+    return sigs;
+  }
+
+  async addDonation(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    amount: number,
+    currency?: string
+  ): Promise<Donation> {
+    const donationData = {
+      petitionId,
+      userId,
+      userName,
+      amount,
+      currency: currency || "EUR",
+      paymentStatus: "completed",
+      createdAt: Timestamp.now(),
+    };
+    const donationsCol = collection(db, "donations");
+    const docRef = await addDoc(donationsCol, donationData);
+    return {
+      id: docRef.id,
+      petitionId,
+      userId,
+      userName,
+      amount,
+      currency: currency || "EUR",
+      paymentStatus: "completed",
+      createdAt: new Date(),
+    };
+  }
+
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    const notificationsCol = collection(db, "notifications");
+    const q = query(
+      notificationsCol,
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    const notifs: Notification[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      let rawDate = new Date();
+      if (data.createdAt && typeof data.createdAt.toDate === "function") {
+        rawDate = data.createdAt.toDate();
+      } else if (data.createdAt) {
+        rawDate = new Date(data.createdAt);
+      }
+      notifs.push({
+        id: doc.id,
+        userId: data.userId || "",
+        title: data.title || "",
+        message: data.message || "",
+        type: data.type || "milestone",
+        petitionId: data.petitionId || "",
+        read: !!data.read,
+        createdAt: rawDate,
+      });
+    });
+    return notifs;
+  }
+
+  async markNotificationRead(notificationId: string): Promise<void> {
+    const notifDocRef = doc(db, "notifications", notificationId);
+    await updateDoc(notifDocRef, {
+      read: true,
     });
   }
 }

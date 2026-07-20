@@ -1,6 +1,9 @@
 import { Petition } from "../entities/Petition";
 import { Comment } from "../entities/Comment";
 import { TimelineEvent } from "../entities/TimelineEvent";
+import { Signature } from "../entities/Signature";
+import { Notification } from "../entities/Notification";
+import { Donation } from "../entities/Donation";
 
 export interface PetitionRepository {
   createPetition(
@@ -19,7 +22,17 @@ export interface PetitionRepository {
   getPetitionById(id: string): Promise<Petition | null>;
   getAllPetitions(category?: string, scale?: string): Promise<Petition[]>;
   getPetitionsByUserId(userId: string): Promise<Petition[]>;
-  signPetition(petitionId: string, userId: string, userName: string): Promise<void>;
+  
+  /** Sign a petition and record a detailed signature record. */
+  signPetition(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    reason?: string,
+    city?: string,
+    country?: string
+  ): Promise<void>;
+  
   incrementViews(petitionId: string): Promise<void>;
   incrementShares(petitionId: string): Promise<void>;
 
@@ -57,4 +70,22 @@ export interface PetitionRepository {
 
   /** Mark a petition as successful (victory). */
   declareVictory(petitionId: string): Promise<void>;
+
+  /** Get a list of detailed signatures for a petition. */
+  getSignatures(petitionId: string): Promise<Signature[]>;
+
+  /** Add a micro-donation for collaborative advertising boost. */
+  addDonation(
+    petitionId: string,
+    userId: string,
+    userName: string,
+    amount: number,
+    currency?: string
+  ): Promise<Donation>;
+
+  /** Fetch notifications for a user. */
+  getUserNotifications(userId: string): Promise<Notification[]>;
+
+  /** Mark a notification as read. */
+  markNotificationRead(notificationId: string): Promise<void>;
 }
