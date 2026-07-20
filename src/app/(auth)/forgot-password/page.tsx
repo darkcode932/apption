@@ -6,9 +6,12 @@ import { HiMail, HiArrowLeft, HiCheckCircle } from "react-icons/hi";
 import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import AuthError from "../../components/AuthError";
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 import { sendPasswordResetUseCase } from "../../../infrastructure/ServiceLocator";
 
 export default function ForgotPasswordPage() {
+  const t = useT();
+  const { locale } = useLanguage();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -26,7 +29,7 @@ export default function ForgotPasswordPage() {
     } catch (err: any) {
       console.error(err);
       setError(
-        err?.message || "Une erreur est survenue lors de l'envoi de l'email."
+        err?.message || (locale === "fr" ? "Une erreur est survenue lors de l'envoi de l'email." : "An error occurred while sending the email.")
       );
     } finally {
       setLoading(false);
@@ -47,9 +50,13 @@ export default function ForgotPasswordPage() {
               <HiCheckCircle className="h-16 w-16 text-green-400" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-extrabold font-display">Email envoyé !</h2>
+              <h2 className="text-2xl font-extrabold font-display">
+                {locale === "fr" ? "Email envoyé !" : "Email sent!"}
+              </h2>
               <p className="text-sm text-neutral-400 font-light leading-relaxed">
-                Un email contenant les instructions de réinitialisation de mot de passe a été envoyé à{" "}
+                {locale === "fr" 
+                  ? "Un email contenant les instructions de réinitialisation de mot de passe a été envoyé à" 
+                  : "An email containing instructions to reset your password has been sent to"}{" "}
                 <span className="font-semibold text-white">{email}</span>.
               </p>
             </div>
@@ -58,17 +65,17 @@ export default function ForgotPasswordPage() {
               className="inline-flex items-center space-x-2 text-xs font-bold text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider"
             >
               <HiArrowLeft />
-              <span>Retour à la connexion</span>
+              <span>{t("auth.back_to_login")}</span>
             </Link>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="space-y-2 text-center">
               <h1 className="font-extrabold text-2xl sm:text-3xl font-display text-white">
-                Mot de passe oublié ?
+                {t("auth.forgot_title")}?
               </h1>
-              <p className="text-neutral-450 font-light text-xs leading-relaxed">
-                Entrez votre adresse email. Nous vous enverrons un lien pour réinitialiser votre mot de passe.
+              <p className="text-neutral-455 font-light text-xs leading-relaxed">
+                {t("auth.forgot_subtitle")}
               </p>
             </div>
 
@@ -80,7 +87,7 @@ export default function ForgotPasswordPage() {
                   htmlFor="email"
                   className="block mb-2 text-xs font-semibold text-neutral-350 pl-1"
                 >
-                  Adresse Email
+                  {t("common.email")}
                 </label>
                 <Input
                   type="email"
@@ -96,7 +103,7 @@ export default function ForgotPasswordPage() {
 
               <div className="pt-2">
                 <ButtonClick
-                  text={loading ? "Envoi du lien..." : "Envoyer le lien"}
+                  text={loading ? (locale === "fr" ? "Envoi du lien..." : "Sending link...") : t("auth.send_reset_link")}
                   classArrow="text-xl"
                   classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 px-4 py-3 flex w-full justify-center shadow-lg transition-all"
                   type="submit"
@@ -111,7 +118,7 @@ export default function ForgotPasswordPage() {
                 className="inline-flex items-center space-x-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors"
               >
                 <HiArrowLeft />
-                <span>Retour à la connexion</span>
+                <span>{t("auth.back_to_login")}</span>
               </Link>
             </div>
           </div>
@@ -120,3 +127,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

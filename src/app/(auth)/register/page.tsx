@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
@@ -9,6 +10,7 @@ import { FaFacebook } from "react-icons/fa";
 import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import AuthError from "../../components/AuthError";
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 import {
   signUpUseCase,
   signInWithGoogleUseCase,
@@ -17,6 +19,8 @@ import {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useT();
+  const { locale } = useLanguage();
   
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
@@ -37,7 +41,7 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(locale === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match.");
       return;
     }
 
@@ -96,10 +100,10 @@ export default function RegisterPage() {
       <div className="glass-card px-6 sm:px-12 md:px-16 py-10 rounded-3xl text-white max-w-xl w-full shadow-2xl relative z-10 border border-white/10">
         <div className="flex flex-col justify-center text-center space-y-3 mb-8">
           <h1 className="font-extrabold text-3xl sm:text-4xl bg-clip-text text-transparent bg-gradient-to-r from-white to-green-450">
-            Créer un compte
+            {t("auth.register_title")}
           </h1>
           <p className="text-neutral-400 font-light text-xs sm:text-sm leading-relaxed">
-            Rejoignez notre réseau et démarrez vos actions pour influencer positivement le monde.
+            {t("auth.register_subtitle")}
           </p>
         </div>
 
@@ -114,7 +118,7 @@ export default function RegisterPage() {
             className="flex items-center justify-center space-x-3 w-full py-3 px-4 rounded-2xl border border-white/10 bg-neutral-950/30 hover:bg-neutral-900/50 text-white text-sm font-semibold transition-all duration-200 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FcGoogle className="text-xl flex-shrink-0" />
-            <span>{socialLoading === "google" ? "Inscription..." : "S'inscrire avec Google"}</span>
+            <span>{socialLoading === "google" ? t("auth.signing_up") : t("auth.google_sign_in")}</span>
           </button>
 
           <button
@@ -124,14 +128,14 @@ export default function RegisterPage() {
             className="flex items-center justify-center space-x-3 w-full py-3 px-4 rounded-2xl border border-white/10 bg-neutral-950/30 hover:bg-neutral-900/50 text-white text-sm font-semibold transition-all duration-200 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FaFacebook className="text-xl text-blue-500 flex-shrink-0" />
-            <span>{socialLoading === "facebook" ? "Inscription..." : "S'inscrire avec Facebook"}</span>
+            <span>{socialLoading === "facebook" ? t("auth.signing_up") : t("auth.facebook_sign_in")}</span>
           </button>
         </div>
 
         {/* Divider */}
         <div className="flex items-center space-x-3 mb-6">
           <div className="flex-1 h-px bg-white/5" />
-          <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">ou créer un compte</span>
+          <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">{t("common.or")}</span>
           <div className="flex-1 h-px bg-white/5" />
         </div>
 
@@ -139,7 +143,7 @@ export default function RegisterPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="fn" className="block mb-1.5 text-xs font-semibold text-neutral-350 pl-1">
-                Prénom
+                {t("auth.firstname")}
               </label>
               <Input
                 type="text"
@@ -154,7 +158,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <label htmlFor="ln" className="block mb-1.5 text-xs font-semibold text-neutral-350 pl-1">
-                Nom
+                {t("auth.lastname")}
               </label>
               <Input
                 type="text"
@@ -171,7 +175,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="user" className="block mb-1.5 text-xs font-semibold text-neutral-350 pl-1">
-              Nom d&apos;utilisateur
+              {t("auth.username")}
             </label>
             <Input
               type="text"
@@ -187,7 +191,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="email" className="block mb-1.5 text-xs font-semibold text-neutral-350 pl-1">
-              Adresse Email
+              {t("common.email")}
             </label>
             <Input
               type="email"
@@ -203,7 +207,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="password" className="block text-xs mb-1.5 font-semibold text-neutral-350 pl-1">
-              Mot de passe
+              {t("common.password")}
             </label>
             <Input
               type={passwordShow ? "text" : "password"}
@@ -232,7 +236,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-xs mb-1.5 font-semibold text-neutral-350 pl-1">
-              Confirmer le mot de passe
+              {t("auth.confirm_password")}
             </label>
             <Input
               type={cpasswordShow ? "text" : "password"}
@@ -261,7 +265,7 @@ export default function RegisterPage() {
 
           <div className="pt-4">
             <ButtonClick
-              text={loading ? "Inscription..." : "S'inscrire"}
+              text={loading ? t("auth.signing_up") : t("auth.sign_up")}
               classArrow="text-xl"
               classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 px-4 py-3 flex w-full justify-center shadow-lg transition-all"
               type="submit"
@@ -271,12 +275,13 @@ export default function RegisterPage() {
         </form>
 
         <p className="text-center mt-6 text-sm text-neutral-450">
-          Vous avez déjà un compte ?{" "}
+          {t("auth.have_account")}{" "}
           <Link href="/login" className="text-green-450 font-bold hover:text-green-400 transition-colors hover:underline">
-            Se connecter
+            {t("auth.sign_in")}
           </Link>
         </p>
       </div>
     </div>
   );
 }
+

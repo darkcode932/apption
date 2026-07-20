@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+
 import { useRouter } from "next/navigation";
 import { HiArrowRight, HiArrowLeft, HiLocationMarker, HiCheck, HiSparkles, HiOutlineX, HiDocumentText } from "react-icons/hi";
 import { FaCity, FaGlobeAfrica, FaWarehouse, FaTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa";
@@ -8,23 +9,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { createPetitionUseCase } from "../../../infrastructure/ServiceLocator";
 import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
-
-const scales = [
-  { id: "Ville", name: "Ville", icon: FaCity, desc: "Portée locale (quartier, commune, ville)" },
-  { id: "National", name: "National", icon: FaWarehouse, desc: "Portée nationale (pays entier)" },
-  { id: "International", name: "International", icon: FaGlobeAfrica, desc: "Portée mondiale (plusieurs pays)" },
-];
-
-const categories = [
-  "Politique",
-  "Education",
-  "Sport",
-  "Art",
-  "Santé",
-  "Droits de l&apos;homme",
-  "Environnement",
-  "Autres...",
-];
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 
 interface AICopilotResult {
   optimizedTitle: string;
@@ -40,6 +25,34 @@ interface AICopilotResult {
 export default function LaunchPetitionPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { locale } = useLanguage();
+  const t = useT();
+
+  const scales = [
+    { id: "Ville", name: locale === "fr" ? "Ville" : "City", icon: FaCity, desc: locale === "fr" ? "Portée locale (quartier, commune, ville)" : "Local scope (neighborhood, commune, city)" },
+    { id: "National", name: locale === "fr" ? "National" : "National", icon: FaWarehouse, desc: locale === "fr" ? "Portée nationale (pays entier)" : "National scope (entire country)" },
+    { id: "International", name: locale === "fr" ? "International" : "International", icon: FaGlobeAfrica, desc: locale === "fr" ? "Portée mondiale (plusieurs pays)" : "World scope (multiple countries)" },
+  ];
+
+  const categories = locale === "fr" ? [
+    "Politique",
+    "Education",
+    "Sport",
+    "Art",
+    "Santé",
+    "Droits de l'homme",
+    "Environnement",
+    "Autres...",
+  ] : [
+    "Politics",
+    "Education",
+    "Sports",
+    "Art",
+    "Health",
+    "Human Rights",
+    "Environment",
+    "Others...",
+  ];
 
   const [step, setStep] = useState(0);
   const [scale, setScale] = useState("National");
@@ -77,7 +90,9 @@ export default function LaunchPetitionPage() {
 
   const handleCallAiCopilot = async () => {
     if (!title.trim() || !description.trim()) {
-      setError("Veuillez saisir un titre et une description avant d'appeler le copilote IA.");
+      setError(locale === "fr" 
+        ? "Veuillez saisir un titre et une description avant d'appeler le copilote IA." 
+        : "Please enter a title and description before calling the AI copilot.");
       return;
     }
     
@@ -91,7 +106,7 @@ export default function LaunchPetitionPage() {
       const res = await fetch("/api/ai-copilot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, scale, category }),
+        body: JSON.stringify({ title, description, scale, category, lang: locale }),
       });
       const data = await res.json();
       
@@ -119,12 +134,12 @@ export default function LaunchPetitionPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) {
-      setError("Le titre et la description sont obligatoires.");
+      setError(locale === "fr" ? "Le titre et la description sont obligatoires." : "Title and description are required.");
       return;
     }
 
     if (!user) {
-      setError("Vous devez être connecté pour lancer une pétition.");
+      setError(locale === "fr" ? "Vous devez être connecté pour lancer une pétition." : "You must be logged in to launch a petition.");
       return;
     }
 
@@ -152,6 +167,7 @@ export default function LaunchPetitionPage() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 flex-grow flex flex-col justify-center min-h-[calc(100vh-128px)] relative overflow-hidden">
@@ -185,9 +201,9 @@ export default function LaunchPetitionPage() {
           ))}
         </div>
         <div className="flex justify-between max-w-lg mx-auto text-[10px] sm:text-xs text-neutral-450 mt-3 px-2 font-semibold uppercase tracking-wider">
-          <span className={step >= 0 ? "text-green-450" : ""}>Échelle</span>
-          <span className={step >= 1 ? "text-green-450" : ""}>Thématique</span>
-          <span className={step >= 2 ? "text-green-450" : ""}>Détails</span>
+          <span className={step >= 0 ? "text-green-450" : ""}>{t("launch.form_scale")}</span>
+          <span className={step >= 1 ? "text-green-450" : ""}>{t("launch.form_category")}</span>
+          <span className={step >= 2 ? "text-green-450" : ""}>{locale === "fr" ? "Détails" : "Details"}</span>
         </div>
       </div>
 
@@ -204,10 +220,10 @@ export default function LaunchPetitionPage() {
           <div className="space-y-6 flex-grow animate-fadeIn">
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Faites votre premier pas vers le changement
+                {locale === "fr" ? "Faites votre premier pas vers le changement" : "Take your first step towards change"}
               </h2>
               <p className="text-neutral-400 font-light text-sm sm:text-base">
-                Sélectionnez la portée géographique de votre cause pour cibler la bonne audience.
+                {locale === "fr" ? "Sélectionnez la portée géographique de votre cause pour cibler la bonne audience." : "Select the geographical scope of your cause to target the right audience."}
               </p>
             </div>
             
@@ -228,7 +244,7 @@ export default function LaunchPetitionPage() {
                   >
                     <IconComponent className={`text-3xl mb-4 ${isSelected ? "text-green-400" : "text-neutral-500"}`} />
                     <h3 className="font-extrabold text-lg text-white font-display">{s.name}</h3>
-                    <p className="text-xs text-neutral-450 mt-1.5 font-light leading-relaxed">{s.desc}</p>
+                    <p className="text-xs text-neutral-455 mt-1.5 font-light leading-relaxed">{s.desc}</p>
                   </button>
                 );
               })}
@@ -241,10 +257,10 @@ export default function LaunchPetitionPage() {
           <div className="space-y-6 flex-grow animate-fadeIn">
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Quelle est la thématique principale ?
+                {locale === "fr" ? "Quelle est la thématique principale ?" : "What is the main topic?"}
               </h2>
               <p className="text-neutral-400 font-light text-sm sm:text-base">
-                Classer votre pétition aide les signataires à la découvrir.
+                {locale === "fr" ? "Classer votre pétition aide les signataires à la découvrir." : "Classifying your petition helps signers discover it."}
               </p>
             </div>
 
@@ -276,10 +292,10 @@ export default function LaunchPetitionPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                  Rédigez et publiez votre pétition
+                  {t("launch.title")}
                 </h2>
-                <p className="text-neutral-450 font-light text-xs sm:text-sm">
-                  Choisissez un titre percutant et décrivez clairement le changement que vous souhaitez obtenir.
+                <p className="text-neutral-455 font-light text-xs sm:text-sm">
+                  {t("launch.subtitle")}
                 </p>
               </div>
               
@@ -289,7 +305,7 @@ export default function LaunchPetitionPage() {
                 className="flex items-center space-x-2 text-xs font-bold bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-neutral-950 px-4 py-2.5 rounded-xl transition-all self-end sm:self-center cursor-pointer shadow-md hover:shadow-green-500/10"
               >
                 <HiSparkles className="text-sm" />
-                <span>Optimiser avec l&apos;IA ✨</span>
+                <span>{t("launch.copilot_btn")} ✨</span>
               </button>
             </div>
 
@@ -300,7 +316,7 @@ export default function LaunchPetitionPage() {
                   htmlFor="title"
                   className="absolute -top-2 left-3 -mt-px inline-block bg-[#16161c] px-1.5 text-[10px] font-semibold text-green-400 uppercase tracking-wider"
                 >
-                  Titre de la pétition
+                  {t("launch.form_title")}
                 </label>
                 <input
                   type="text"
@@ -309,7 +325,7 @@ export default function LaunchPetitionPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="block w-full border-0 p-0 text-white placeholder-neutral-500 bg-transparent focus:ring-0 sm:text-sm outline-none font-medium"
-                  placeholder="Ex: Rendons sa liberté à Onomo"
+                  placeholder={locale === "fr" ? "Ex: Rendons sa liberté à Onomo" : "Ex: Let's give Onomo back his freedom"}
                   required
                   disabled={loading}
                 />
@@ -318,7 +334,7 @@ export default function LaunchPetitionPage() {
               {/* Description textarea */}
               <div className="space-y-1.5">
                 <label htmlFor="description" className="block text-xs font-semibold text-neutral-350 pl-1">
-                  Description de la pétition
+                  {t("launch.form_desc")}
                 </label>
                 <textarea
                   rows={5}
@@ -327,7 +343,7 @@ export default function LaunchPetitionPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="block w-full px-4 py-3.5 rounded-2xl border border-white/5 bg-neutral-950/20 text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 sm:text-sm resize-none transition-all"
-                  placeholder="Expliquez le problème qui vous tient à cœur, pourquoi il est important et l'impact qu'il aura sur votre communauté..."
+                  placeholder={locale === "fr" ? "Expliquez le problème qui vous tient à cœur, pourquoi il est important et l'impact qu'il aura sur votre communauté..." : "Explain the issue you care about, why it is important and the impact it will have on your community..."}
                   required
                   disabled={loading}
                 />
@@ -336,7 +352,7 @@ export default function LaunchPetitionPage() {
               {/* File upload */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-neutral-350 pl-1">
-                  Photo d&apos;illustration (Optionnelle)
+                  {t("launch.form_image")}
                 </label>
                 <div className="mt-1 flex justify-center rounded-2xl border border-dashed border-white/10 px-6 pt-6 pb-6 bg-neutral-950/10 hover:border-white/20 transition-colors">
                   <div className="space-y-2 text-center flex flex-col items-center">
@@ -358,9 +374,9 @@ export default function LaunchPetitionPage() {
                     <div className="flex text-sm text-neutral-400">
                       <label
                         htmlFor="file-upload"
-                        className="relative cursor-pointer rounded-md font-semibold text-green-450 hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-green-500 transition-colors"
+                        className="relative cursor-pointer rounded-md font-semibold text-green-455 hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-green-500 transition-colors"
                       >
-                        <span>Charger une photo</span>
+                        <span>{locale === "fr" ? "Charger une photo" : "Upload a photo"}</span>
                         <input
                           id="file-upload"
                           name="file-upload"
@@ -371,9 +387,9 @@ export default function LaunchPetitionPage() {
                           disabled={loading}
                         />
                       </label>
-                      <p className="pl-1">ou glissez-déposez ici</p>
+                      <p className="pl-1">{locale === "fr" ? "ou glissez-déposez ici" : "or drag and drop here"}</p>
                     </div>
-                    <p className="text-xs text-neutral-500">PNG, JPG, GIF jusqu&apos;à 10 Mo</p>
+                    <p className="text-xs text-neutral-500">{locale === "fr" ? "PNG, JPG, GIF jusqu'à 10 Mo" : "PNG, JPG, GIF up to 10 MB"}</p>
                     
                     {imagePreview && (
                       <div className="mt-4 relative rounded-xl overflow-hidden max-w-xs border border-white/5">
@@ -386,7 +402,7 @@ export default function LaunchPetitionPage() {
                           }}
                           className="absolute top-1.5 right-1.5 bg-neutral-950/80 hover:bg-neutral-900 text-white rounded-full p-1 border border-white/5 text-xs transition-colors"
                         >
-                          Retirer
+                          {locale === "fr" ? "Retirer" : "Remove"}
                         </button>
                       </div>
                     )}
@@ -408,7 +424,7 @@ export default function LaunchPetitionPage() {
                 className="flex items-center space-x-2 text-neutral-450 hover:text-white font-semibold transition-all border border-white/5 hover:bg-neutral-900 px-5 py-2.5 rounded-full text-xs"
               >
                 <HiArrowLeft />
-                <span>Retour</span>
+                <span>{t("common.back")}</span>
               </button>
             )}
           </div>
@@ -416,14 +432,14 @@ export default function LaunchPetitionPage() {
           <div>
             {step < 2 ? (
               <ButtonClick
-                text="Continuer"
+                text={locale === "fr" ? "Continuer" : "Continue"}
                 classButton="rounded-full bg-green-500 hover:bg-green-600 px-6 py-2.5 text-neutral-950 text-xs font-extrabold flex items-center space-x-1 shadow-md hover:shadow-green-500/10"
                 classArrow="hidden"
                 onClick={() => setStep(step + 1)}
               />
             ) : (
               <ButtonClick
-                text={loading ? "Publication..." : "Publier la pétition"}
+                text={loading ? t("launch.form_submitting") : t("launch.form_submit")}
                 classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 px-8 py-3 text-xs font-extrabold shadow-lg shadow-green-950/20"
                 type="submit"
                 onClick={handleFormSubmit}
@@ -443,7 +459,7 @@ export default function LaunchPetitionPage() {
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div className="flex items-center space-x-2 text-green-400">
                 <HiSparkles className="text-xl animate-pulse" />
-                <h3 className="text-lg font-extrabold text-white font-display">Copilote de Campagne IA</h3>
+                <h3 className="text-lg font-extrabold text-white font-display">{t("launch.copilot_title")}</h3>
               </div>
               <button
                 onClick={() => setShowAiModal(false)}
@@ -457,8 +473,8 @@ export default function LaunchPetitionPage() {
             <div className="flex-grow overflow-y-auto space-y-6 pr-1 scrollbar-hidden">
               {aiLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-450" />
-                  <p className="text-xs text-neutral-450 italic">Analyse de votre texte et rédaction en cours...</p>
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-455" />
+                  <p className="text-xs text-neutral-455 italic">{t("launch.copilot_optimizing")}</p>
                 </div>
               ) : aiError ? (
                 <div className="p-4 rounded-xl border border-red-500/20 bg-red-950/20 text-red-400 text-xs flex items-center space-x-2">
@@ -469,7 +485,7 @@ export default function LaunchPetitionPage() {
                 <div className="space-y-6 animate-fadeIn text-sm">
                   {/* Optimized Title */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Titre Suggéré</h4>
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{locale === "fr" ? "Titre Suggéré" : "Suggested Title"}</h4>
                     <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 font-semibold text-white">
                       {aiResult.optimizedTitle}
                     </div>
@@ -477,7 +493,7 @@ export default function LaunchPetitionPage() {
 
                   {/* Optimized Description */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Description Suggérée</h4>
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{locale === "fr" ? "Description Suggérée" : "Suggested Description"}</h4>
                     <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 leading-relaxed text-neutral-300 font-light whitespace-pre-wrap">
                       {aiResult.optimizedDescription}
                     </div>
@@ -485,7 +501,7 @@ export default function LaunchPetitionPage() {
 
                   {/* Suggested Targets */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Décideurs Cibles Suggérés</h4>
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{t("launch.copilot_targets")}</h4>
                     <div className="flex flex-wrap gap-2 pl-1">
                       {aiResult.suggestedTargets.map((target, idx) => (
                         <span
@@ -500,7 +516,7 @@ export default function LaunchPetitionPage() {
 
                   {/* Social Share Kit */}
                   <div className="space-y-3 pt-2 border-t border-white/5">
-                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">Kit Réseaux Sociaux</h4>
+                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{t("launch.copilot_kit")}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Twitter */}
                       <div className="bg-neutral-950/40 p-4 rounded-2xl border border-white/5 space-y-2">
@@ -514,7 +530,7 @@ export default function LaunchPetitionPage() {
                             onClick={() => handleCopyText(aiResult.socialKit.twitter, "twitter")}
                             className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
                           >
-                            {copiedType === "twitter" ? "Copié !" : "Copier"}
+                            {copiedType === "twitter" ? (locale === "fr" ? "Copié !" : "Copied!") : (locale === "fr" ? "Copier" : "Copy")}
                           </button>
                         </div>
                         <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
@@ -534,7 +550,7 @@ export default function LaunchPetitionPage() {
                             onClick={() => handleCopyText(aiResult.socialKit.facebook, "facebook")}
                             className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
                           >
-                            {copiedType === "facebook" ? "Copié !" : "Copier"}
+                            {copiedType === "facebook" ? (locale === "fr" ? "Copié !" : "Copied!") : (locale === "fr" ? "Copier" : "Copy")}
                           </button>
                         </div>
                         <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
@@ -554,7 +570,7 @@ export default function LaunchPetitionPage() {
                             onClick={() => handleCopyText(aiResult.socialKit.whatsapp, "whatsapp")}
                             className="text-[10px] bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white px-2 py-1 rounded-lg transition-all font-medium cursor-pointer"
                           >
-                            {copiedType === "whatsapp" ? "Copié !" : "Copier"}
+                            {copiedType === "whatsapp" ? (locale === "fr" ? "Copié !" : "Copied!") : (locale === "fr" ? "Copier" : "Copy")}
                           </button>
                         </div>
                         <p className="text-neutral-400 text-xs font-light select-all leading-normal pt-1">
@@ -574,7 +590,7 @@ export default function LaunchPetitionPage() {
                 onClick={() => setShowAiModal(false)}
                 className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
               >
-                Fermer
+                {locale === "fr" ? "Fermer" : "Close"}
               </button>
               {aiResult && (
                 <button
@@ -583,7 +599,7 @@ export default function LaunchPetitionPage() {
                   className="flex items-center space-x-1.5 px-6 py-2.5 rounded-full bg-green-500 hover:bg-green-600 text-neutral-950 text-xs font-extrabold shadow-md hover:shadow-green-500/10 cursor-pointer"
                 >
                   <HiCheck className="text-sm" />
-                  <span>Appliquer les suggestions</span>
+                  <span>{t("launch.copilot_apply")}</span>
                 </button>
               )}
             </div>
@@ -595,3 +611,4 @@ export default function LaunchPetitionPage() {
     </div>
   );
 }
+

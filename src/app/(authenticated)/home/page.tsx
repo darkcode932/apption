@@ -9,30 +9,40 @@ import { getPetitionsUseCase } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
 import { useAuth } from "../../contexts/AuthContext";
 import { geolocationService } from "../../../infrastructure/geolocation/geolocationService";
-
-const fallbackPetitions = [
-  {
-    id: "1",
-    title: "Libération d'un prisonnier à la prison de New-Bell",
-    imageUrl: "/assets/images/libération.jpg",
-  },
-  {
-    id: "2",
-    title: "Protection de l'environnement contre la déforestation",
-    imageUrl: "/assets/images/feuille.jpg",
-  },
-  {
-    id: "3",
-    title: "Limitation de vitesse en zone urbaine à 30km/h",
-    imageUrl: "/assets/images/limitation.jpg",
-  },
-];
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { locale } = useLanguage();
+  const t = useT();
+  
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedMode, setFeedMode] = useState<"targeted" | "global">("targeted");
+
+  const fallbackPetitions = [
+    {
+      id: "1",
+      title: locale === "fr" 
+        ? "Libération d'un prisonnier à la prison de New-Bell" 
+        : "Release of a prisoner from New-Bell prison",
+      imageUrl: "/assets/images/libération.jpg",
+    },
+    {
+      id: "2",
+      title: locale === "fr"
+        ? "Protection de l'environnement contre la déforestation"
+        : "Environmental protection against deforestation",
+      imageUrl: "/assets/images/feuille.jpg",
+    },
+    {
+      id: "3",
+      title: locale === "fr"
+        ? "Limitation de vitesse en zone urbaine à 30km/h"
+        : "Urban speed limit restricted to 30km/h",
+      imageUrl: "/assets/images/limitation.jpg",
+    },
+  ];
 
   useEffect(() => {
     async function loadPetitions() {
@@ -111,22 +121,21 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[#0b0b0f]/75 mix-blend-multiply" />
           
           <span className="relative z-10 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-full uppercase tracking-wider">
-            Changement Global
+            {t("home.global_change")}
           </span>
           
           <h1 className="relative z-10 text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight text-white drop-shadow-md">
-            La plateforme mondiale pour le changement, l&apos;influence de l&apos;
-            <span className="text-red-500">histoire</span>
+            {t("home.title_primary")}
+            <span className="text-red-500">{t("home.title_history")}</span>
           </h1>
           <p className="relative z-10 font-light text-neutral-350 sm:text-lg max-w-2xl">
-            Des milliers de personnes agissent sur le destin de notre planète{" "}
-            <span className="text-red-400 font-semibold">chaque jour</span>.
+            {t("home.tagline")}
           </p>
         </div>
         
         <Link href="/launch-petition">
           <ButtonClick
-            text="Lancer une pétition"
+            text={t("home.launch_button")}
             classButton="rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 px-10 py-4.5 shadow-xl shadow-red-950/20 transition-all text-lg font-bold"
             classArrow="text-2xl"
           />
@@ -144,7 +153,7 @@ export default function HomePage() {
                 : "border-white/5 bg-neutral-950/30 text-neutral-400 hover:border-white/10 hover:text-white"
             }`}
           >
-            📍 Autour de moi ({user.city || "Local"})
+            {t("home.around_me")} ({user.city || t("home.local_fallback")})
           </button>
           <button
             onClick={() => setFeedMode("global")}
@@ -154,7 +163,7 @@ export default function HomePage() {
                 : "border-white/5 bg-neutral-950/30 text-neutral-400 hover:border-white/10 hover:text-white"
             }`}
           >
-            🌍 Toutes les causes (Mondial)
+            {t("home.all_causes")} ({t("home.global_fallback")})
           </button>
         </div>
       )}
@@ -162,7 +171,7 @@ export default function HomePage() {
       {/* Highlight Petition */}
       <div className="space-y-6 relative z-10 pt-2">
         <h2 className="text-center font-extrabold text-red-500 text-2xl tracking-wide uppercase sm:text-3xl font-display">
-          À la une
+          {t("home.featured")}
         </h2>
         {loading ? (
           <div className="flex justify-center py-10">
@@ -178,7 +187,7 @@ export default function HomePage() {
         <div className="flex items-center space-x-3">
           <div className="h-6 w-1 bg-green-500 rounded-full" />
           <h2 className="text-xl sm:text-2xl font-extrabold text-white font-display tracking-tight">
-            Pétitions populaires
+            {t("home.popular")}
           </h2>
         </div>
         
@@ -203,7 +212,7 @@ export default function HomePage() {
                 ))}
                 {gridPetitions.length === 0 && filteredPetitions.length === 1 && (
                   <p className="col-span-full text-neutral-500 text-sm py-4 italic">
-                    Aucune autre pétition pour le moment.
+                    {t("home.no_other_petitions")}
                   </p>
                 )}
               </>
@@ -222,3 +231,4 @@ export default function HomePage() {
     </div>
   );
 }
+

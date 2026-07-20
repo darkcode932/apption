@@ -3,10 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { HiPlusCircle, HiOutlineChevronRight } from "react-icons/hi";
+
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 export default function Profile() {
   const { user } = useAuth();
+  const { locale } = useLanguage();
 
   return (
     <div className="glass-card p-8 rounded-3xl border border-white/5 shadow-2xl w-full flex flex-col justify-center items-center">
@@ -24,10 +27,10 @@ export default function Profile() {
         {/* Text */}
         <div className="mt-5 text-center">
           <p className="text-xl font-extrabold text-white leading-tight font-display">
-            {user ? `${user.firstname} ${user.lastname}` : "Utilisateur Apption"}
+            {user ? `${user.firstname} ${user.lastname}` : (locale === "fr" ? "Utilisateur Apption" : "Apption User")}
           </p>
           <p className="text-xs text-neutral-450 mt-1 font-light">
-            @{user?.username || "invité"}
+            @{user?.username || (locale === "fr" ? "invité" : "guest")}
           </p>
         </div>
       </div>
@@ -36,10 +39,12 @@ export default function Profile() {
       <Link href="/launch-petition" className="w-full">
         <div className="flex items-center justify-center space-x-3 px-4 py-3.5 mt-8 border border-green-500/30 hover:border-green-400 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-neutral-950 font-bold rounded-2xl cursor-pointer transition-all duration-300 active:scale-[0.98] text-sm shadow-md hover:shadow-green-500/20 shadow-neutral-950/20">
           <HiPlusCircle className="text-xl flex-shrink-0" />
-          <span>Nouvelle Pétition</span>
+          <span>{locale === "fr" ? "Nouvelle Pétition" : "New Petition"}</span>
           <HiOutlineChevronRight className="flex-shrink-0" />
+
         </div>
       </Link>
     </div>
   );
 }
+

@@ -14,13 +14,17 @@ import {
 } from "react-icons/hi2";
 import { useAuth } from "../contexts/AuthContext";
 import { signOutUseCase } from "../../infrastructure/ServiceLocator";
+import { useLanguage, useT } from "../../i18n/LanguageContext";
 import AdminGuard from "./AdminGuard";
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = useT();
+  const { locale, setLocale } = useLanguage();
 
   // Skip Sidebar rendering for login screen
   const isLoginPage = pathname === "/admin/login";
@@ -39,10 +43,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const navLinks = [
-    { href: "/admin/dashboard", name: "Tableau de Bord", icon: HiChartBar },
-    { href: "/admin/users", name: "Utilisateurs & Rôles", icon: HiUsers },
-    { href: "/admin/petitions", name: "Modération Pétitions", icon: HiDocumentText },
+    { href: "/admin/dashboard", name: t("admin.dashboard"), icon: HiChartBar },
+    { href: "/admin/users", name: t("admin.users"), icon: HiUsers },
+    { href: "/admin/petitions", name: t("admin.petitions"), icon: HiDocumentText },
   ];
+
 
   return (
     <AdminGuard>
@@ -86,6 +91,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </nav>
           </div>
 
+          {/* Language Switcher */}
+          <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between">
+            <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">{locale === "fr" ? "Langue" : "Language"}</span>
+            <button
+              onClick={() => setLocale(locale === "fr" ? "en" : "fr")}
+              className="px-2.5 py-1 bg-neutral-900 border border-neutral-800 hover:border-green-500 text-neutral-350 hover:text-white transition-all cursor-pointer rounded-full text-xs font-bold"
+            >
+              <span>{locale === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}</span>
+            </button>
+          </div>
+
           <div className="space-y-3.5 border-t border-white/5 pt-6">
             <div className="flex items-center space-x-3 px-4">
               <div className="h-8 w-8 rounded-full bg-neutral-900 flex items-center justify-center text-xs text-green-400 font-extrabold border border-white/5 uppercase">
@@ -96,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {user?.firstname} {user?.lastname}
                 </p>
                 <p className="text-[9px] text-neutral-500 font-semibold uppercase mt-1">
-                  {user?.role === "super_admin" ? "Super Admin" : "Administrateur"}
+                  {user?.role === "super_admin" ? t("admin.role_super_admin") : t("admin.role_admin")}
                 </p>
               </div>
             </div>
@@ -106,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-white/5 transition-all font-medium"
             >
               <HiArrowUpRight className="text-sm" />
-              <span>Retour à l&apos;application</span>
+              <span>{t("admin.back_to_app")}</span>
             </Link>
 
             <button
@@ -114,9 +130,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-bold w-full text-left cursor-pointer"
             >
               <HiArrowLeftOnRectangle className="text-sm" />
-              <span>Se déconnecter</span>
+              <span>{t("admin.logout")}</span>
             </button>
           </div>
+
         </aside>
 
         {/* Mobile Header Bar */}
@@ -164,6 +181,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               })}
             </nav>
 
+            {/* Mobile Language Switcher */}
+            <div className="px-4 py-2.5 border-t border-white/5 mt-2 flex justify-between items-center">
+              <span className="text-xs text-neutral-400 font-medium">{locale === "fr" ? "Langue" : "Language"}</span>
+              <button
+                onClick={() => setLocale(locale === "fr" ? "en" : "fr")}
+                className="px-2.5 py-1 rounded-full text-xs font-bold bg-neutral-900 border border-neutral-800 text-neutral-355 hover:text-white transition-all cursor-pointer"
+              >
+                <span>{locale === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}</span>
+              </button>
+            </div>
+
             <div className="space-y-4 border-t border-white/5 pt-6">
               <div className="flex items-center space-x-3 px-4">
                 <div className="h-8 w-8 rounded-full bg-neutral-900 flex items-center justify-center text-xs text-green-400 font-extrabold border border-white/5 uppercase">
@@ -174,7 +202,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {user?.firstname} {user?.lastname}
                   </p>
                   <p className="text-[8px] text-neutral-500 font-bold uppercase mt-1">
-                    {user?.role === "super_admin" ? "Super Admin" : "Administrateur"}
+                    {user?.role === "super_admin" ? t("admin.role_super_admin") : t("admin.role_admin")}
                   </p>
                 </div>
               </div>
@@ -185,7 +213,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-white/5 transition-all font-medium"
               >
                 <HiArrowUpRight className="text-sm" />
-                <span>Retour à l&apos;application</span>
+                <span>{t("admin.back_to_app")}</span>
               </Link>
 
               <button
@@ -193,9 +221,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-bold w-full text-left cursor-pointer"
               >
                 <HiArrowLeftOnRectangle className="text-sm" />
-                <span>Se déconnecter</span>
+                <span>{t("admin.logout")}</span>
               </button>
             </div>
+
           </aside>
         )}
 

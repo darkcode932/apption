@@ -3,19 +3,29 @@ import Link from "next/link";
 import { UserGroupIcon, BanknotesIcon, UserIcon } from "@heroicons/react/24/outline";
 import { HiTrophy } from "react-icons/hi2";
 import { Petition } from "../../domain/entities/Petition";
+import { useLanguage, useT } from "../../i18n/LanguageContext";
 
 interface HomePetProps {
   petition?: Petition | null;
 }
 
 export default function HomePet({ petition }: HomePetProps) {
+  const { locale } = useLanguage();
+  const t = useT();
   const isFallback = !petition;
 
   const id = petition?.id || "";
-  const title = petition?.title || "L'ENSPD sera dotée de toilettes publiques";
-  const description =
-    petition?.description ||
-    "Grâce à la collecte de 3500 signatures, les étudiants de l'ENSPD ont eu l'approbation pour la création de toilettes publiques, ceci visant l'amélioration de la qualité de vie au sein de campus.";
+  
+  const fallbackTitle = locale === "fr" 
+    ? "L'ENSPD sera dotée de toilettes publiques" 
+    : "ENSPD will be equipped with public toilets";
+  
+  const fallbackDescription = locale === "fr"
+    ? "Grâce à la collecte de 3500 signatures, les étudiants de l'ENSPD ont eu l'approbation pour la création de toilettes publiques, ceci visant l'amélioration de la qualité de vie au sein de campus."
+    : "Thanks to the collection of 3500 signatures, the ENSPD students received approval for the creation of public toilets, aiming to improve the quality of life within the campus.";
+
+  const title = petition?.title || fallbackTitle;
+  const description = petition?.description || fallbackDescription;
   const imageUrl = petition?.imageUrl || "/assets/images/card.jpg";
   const creatorName = petition?.creatorName || "Russel Atebede";
   const signaturesCount = petition?.signaturesCount || 3500;
@@ -34,12 +44,12 @@ export default function HomePet({ petition }: HomePetProps) {
         <div className="flex flex-col space-y-4 py-8 px-6 md:px-8">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase text-red-500 font-bold tracking-widest">
-              À la une
+              {t("home.featured")}
             </span>
             {isVictory && (
               <span className="flex items-center space-x-1.5 py-1 px-3 bg-yellow-500 text-neutral-950 font-extrabold text-[10px] uppercase tracking-wider rounded-full shadow-md shadow-yellow-500/10 animate-pulse">
                 <HiTrophy className="text-xs" />
-                <span>Victoire !</span>
+                <span>{locale === "fr" ? "Victoire !" : "Victory!"}</span>
               </span>
             )}
           </div>
@@ -56,21 +66,29 @@ export default function HomePet({ petition }: HomePetProps) {
             <UserIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
             <div className="flex flex-col min-w-0">
               <span className="font-semibold text-xs text-white truncate">{creatorName}</span>
-              <span className="text-[10px] text-neutral-500">Auteur</span>
+              <span className="text-[10px] text-neutral-500">
+                {locale === "fr" ? "Auteur" : "Author"}
+              </span>
             </div>
           </div>
           <div className="flex items-center justify-center space-x-2 px-2">
             <UserGroupIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-sm text-white">{signaturesCount}</span>
-              <span className="text-[10px] text-neutral-500">Signataires</span>
+              <span className="text-[10px] text-neutral-500">
+                {locale === "fr" ? "Signataires" : "Signatures"}
+              </span>
             </div>
           </div>
           <div className="flex items-center justify-center space-x-2 px-2">
             <BanknotesIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-xs text-white">Sponsorisée</span>
-              <span className="text-[10px] text-neutral-500">Non</span>
+              <span className="font-semibold text-xs text-white">
+                {locale === "fr" ? "Sponsorisée" : "Sponsored"}
+              </span>
+              <span className="text-[10px] text-neutral-500">
+                {locale === "fr" ? "Non" : "No"}
+              </span>
             </div>
           </div>
         </div>
@@ -90,3 +108,4 @@ export default function HomePet({ petition }: HomePetProps) {
     </div>
   );
 }
+

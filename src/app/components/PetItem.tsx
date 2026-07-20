@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { HiTrophy } from "react-icons/hi2";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 interface PetItemProps {
   text: string;
@@ -10,6 +11,7 @@ interface PetItemProps {
 }
 
 export default function PetItem({ text, link, id, status }: PetItemProps) {
+  const { locale } = useLanguage();
   const href = id ? `/petitions/${id}` : "#";
   const isVictory = status === "victory";
 
@@ -22,7 +24,7 @@ export default function PetItem({ text, link, id, status }: PetItemProps) {
       {isVictory && (
         <div className="absolute top-2.5 right-2.5 z-10 flex items-center space-x-1 py-1 px-2.5 bg-yellow-500 text-neutral-950 font-bold text-[9px] uppercase tracking-wider rounded-full shadow-lg shadow-yellow-500/10">
           <HiTrophy className="text-[10px]" />
-          <span>Victoire</span>
+          <span>{locale === "fr" ? "Victoire" : "Victory"}</span>
         </div>
       )}
 
@@ -39,3 +41,4 @@ export default function PetItem({ text, link, id, status }: PetItemProps) {
     </Link>
   );
 }
+

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PetBotWidget from "../components/PetBotWidget";
 
 export default function AuthenticatedLayout({
   children,
@@ -38,6 +39,8 @@ export default function AuthenticatedLayout({
       <Navbar />
       <main className="flex-grow flex flex-col bg-neutral-900">{children}</main>
       <Footer />
+      <PetBotWidget />
     </>
   );
 }
+

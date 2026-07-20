@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+
 import { HiMagnifyingGlass, HiTrash, HiStar } from "react-icons/hi2";
 import {
   getPetitionsUseCase,
@@ -8,8 +9,11 @@ import {
   updatePetitionFeaturedUseCase,
 } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 
 export default function AdminPetitionsPage() {
+  const { locale } = useLanguage();
+  const t = useT();
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +34,9 @@ export default function AdminPetitionsPage() {
   }, []);
 
   const handleDelete = async (petition: Petition) => {
-    const confirmMsg = `Êtes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT la pétition "${petition.title}" ? Cette action est irréversible.`;
+    const confirmMsg = locale === "fr" 
+      ? `Êtes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT la pétition "${petition.title}" ? Cette action est irréversible.`
+      : `Are you sure you want to PERMANENTLY DELETE the petition "${petition.title}"? This action is irreversible.`;
     if (!confirm(confirmMsg)) return;
 
     setLoading(true);
@@ -39,7 +45,7 @@ export default function AdminPetitionsPage() {
       await loadPetitions();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la suppression de la pétition.");
+      alert(locale === "fr" ? "Erreur lors de la suppression de la pétition." : "Error while deleting petition.");
       setLoading(false);
     }
   };
@@ -56,7 +62,7 @@ export default function AdminPetitionsPage() {
       await updatePetitionFeaturedUseCase.execute(petition.id, newFeatured);
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la mise à jour de la mise en avant.");
+      alert(locale === "fr" ? "Erreur lors de la mise à jour de la mise en avant." : "Error updating featured status.");
       // Rollback on failure
       setPetitions((prev) =>
         prev.map((p) => (p.id === petition.id ? { ...p, isFeatured: !newFeatured } : p))
@@ -75,7 +81,9 @@ export default function AdminPetitionsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-white">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
-        <p className="mt-4 text-xs text-neutral-450 italic">Chargement des pétitions...</p>
+        <p className="mt-4 text-xs text-neutral-455 italic">
+          {locale === "fr" ? "Chargement des pétitions..." : "Loading petitions..."}
+        </p>
       </div>
     );
   }
@@ -86,10 +94,10 @@ export default function AdminPetitionsPage() {
       {/* Header */}
       <div className="border-b border-white/5 pb-6">
         <h1 className="text-3xl font-extrabold text-white font-display tracking-tight">
-          Modération des Pétitions
+          {t("admin.moderation_title")}
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-450 mt-1.5 font-light">
-          Mettez en avant des causes citoyennes méritantes ou supprimez les campagnes non conformes.
+        <p className="text-xs sm:text-sm text-neutral-455 mt-1.5 font-light">
+          {t("admin.moderation_subtitle")}
         </p>
       </div>
 
@@ -102,7 +110,7 @@ export default function AdminPetitionsPage() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Rechercher par titre ou mots clés..."
+          placeholder={locale === "fr" ? "Rechercher par titre ou mots clés..." : "Search by title or keywords..."}
           className="block w-full rounded-2xl border border-white/5 bg-neutral-950/40 py-3.5 pl-11 pr-4 text-sm text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 transition-all"
         />
       </div>
@@ -113,11 +121,11 @@ export default function AdminPetitionsPage() {
           <table className="min-w-full divide-y divide-white/5 text-left text-sm">
             <thead className="bg-neutral-950/50 text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-4 px-6">Pétition</th>
-                <th className="py-4 px-6">Créateur</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Pétition" : "Petition"}</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Créateur" : "Creator"}</th>
                 <th className="py-4 px-6">Signatures</th>
-                <th className="py-4 px-6">Échelle / Catégorie</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Échelle / Catégorie" : "Scale / Category"}</th>
+                <th className="py-4 px-6 text-right">{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 font-medium text-neutral-250">
@@ -134,7 +142,7 @@ export default function AdminPetitionsPage() {
                         {p.title}
                       </p>
                       <p className="text-[10px] text-neutral-500 mt-1">
-                        Créée le {p.createdAt.toLocaleDateString("fr-FR")}
+                        {locale === "fr" ? "Créée le" : "Created on"} {p.createdAt.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US")}
                       </p>
                     </div>
                   </td>
@@ -146,7 +154,7 @@ export default function AdminPetitionsPage() {
 
                   {/* Signatures */}
                   <td className="py-4 px-6 font-semibold whitespace-nowrap text-green-455">
-                    {p.signaturesCount} soutiens
+                    {p.signaturesCount} {locale === "fr" ? "soutiens" : "supports"}
                   </td>
 
                   {/* Scale & Category */}
@@ -167,11 +175,11 @@ export default function AdminPetitionsPage() {
                       className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
                         p.isFeatured
                           ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400 font-bold"
-                          : "border-white/5 text-neutral-450 hover:bg-white/5 hover:text-white"
+                          : "border-white/5 text-neutral-455 hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       <HiStar className="text-sm" />
-                      <span>{p.isFeatured ? "À la une" : "Mettre à la une"}</span>
+                      <span>{p.isFeatured ? (locale === "fr" ? "À la une" : "Featured") : (locale === "fr" ? "Mettre à la une" : "Feature")}</span>
                     </button>
 
                     {/* Delete Petition Button */}
@@ -180,7 +188,7 @@ export default function AdminPetitionsPage() {
                       className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-white/5 hover:border-red-500/20 hover:text-red-450 transition-all cursor-pointer text-red-500/70"
                     >
                       <HiTrash className="text-sm" />
-                      <span>Supprimer</span>
+                      <span>{t("admin.delete")}</span>
                     </button>
                   </td>
 
@@ -190,7 +198,7 @@ export default function AdminPetitionsPage() {
               {filteredPetitions.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-neutral-500 italic">
-                    Aucune pétition trouvée.
+                    {locale === "fr" ? "Aucune pétition trouvée." : "No petitions found."}
                   </td>
                 </tr>
               )}
@@ -202,3 +210,4 @@ export default function AdminPetitionsPage() {
     </div>
   );
 }
+

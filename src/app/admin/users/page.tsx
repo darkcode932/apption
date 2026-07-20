@@ -11,8 +11,12 @@ import {
 import { User } from "../../../domain/entities/User";
 import { Input } from "../../components/Input";
 import ButtonClick from "../../components/ButtonClick";
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 
 export default function AdminUsersPage() {
+  const { locale } = useLanguage();
+  const t = useT();
+
   const { user: currentUser } = useAuth();
   
   const [users, setUsers] = useState<User[]>([]);
@@ -41,19 +45,27 @@ export default function AdminUsersPage() {
 
   const handleRoleToggle = async (targetUser: User) => {
     if (currentUser?.role !== "super_admin") {
-      alert("Seuls les Super Administrateurs peuvent modifier les rôles.");
+      alert(locale === "fr" 
+        ? "Seuls les Super Administrateurs peuvent modifier les rôles." 
+        : "Only Super Administrators can modify roles.");
       return;
     }
 
     if (targetUser.id === currentUser.id) {
-      alert("Vous ne pouvez pas modifier votre propre rôle.");
+      alert(locale === "fr" 
+        ? "Vous ne pouvez pas modifier votre propre rôle." 
+        : "You cannot modify your own role.");
       return;
     }
 
     const newRole = targetUser.role === "admin" ? "user" : "admin";
-    const confirmMsg = `Voulez-vous vraiment changer le rôle de ${targetUser.firstname} en ${
-      newRole === "admin" ? "Administrateur" : "Utilisateur Standard"
-    } ?`;
+    const confirmMsg = locale === "fr"
+      ? `Voulez-vous vraiment changer le rôle de ${targetUser.firstname} en ${
+          newRole === "admin" ? "Administrateur" : "Utilisateur Standard"
+        } ?`
+      : `Do you really want to change the role of ${targetUser.firstname} to ${
+          newRole === "admin" ? "Administrator" : "Standard User"
+        }?`;
 
     if (!confirm(confirmMsg)) return;
 
@@ -63,7 +75,7 @@ export default function AdminUsersPage() {
       await loadUsers();
     } catch (err: any) {
       console.error(err);
-      alert("Erreur lors de la modification du rôle.");
+      alert(locale === "fr" ? "Erreur lors de la modification du rôle." : "Error while modifying role.");
       setLoading(false);
     }
   };
@@ -85,14 +97,16 @@ export default function AdminUsersPage() {
       await loadUsers();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la vérification.");
+      alert(locale === "fr" ? "Erreur lors de la vérification." : "Error during verification.");
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleRemoveVerification = async (targetUser: User) => {
-    if (!confirm(`Retirer le badge certifié pour ${targetUser.firstname} ?`)) return;
+    if (!confirm(locale === "fr" 
+      ? `Retirer le badge certifié pour ${targetUser.firstname} ?` 
+      : `Remove verified badge for ${targetUser.firstname}?`)) return;
 
     setLoading(true);
     try {
@@ -100,10 +114,11 @@ export default function AdminUsersPage() {
       await loadUsers();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors du retrait de la certification.");
+      alert(locale === "fr" ? "Erreur lors du retrait de la certification." : "Error while removing certification.");
       setLoading(false);
     }
   };
+
 
   const filteredUsers = users.filter((u) => {
     const fullName = `${u.firstname} ${u.lastname}`.toLowerCase();
@@ -119,7 +134,9 @@ export default function AdminUsersPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-white">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
-        <p className="mt-4 text-xs text-neutral-450 italic">Chargement de l&apos;annuaire...</p>
+        <p className="mt-4 text-xs text-neutral-455 italic">
+          {locale === "fr" ? "Chargement de l'annuaire..." : "Loading directory..."}
+        </p>
       </div>
     );
   }
@@ -130,10 +147,10 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="border-b border-white/5 pb-6">
         <h1 className="text-3xl font-extrabold text-white font-display tracking-tight">
-          Gestion des Utilisateurs
+          {t("admin.user_title")}
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-450 mt-1.5 font-light">
-          Attribuez des rôles administratifs ou certifiez des comptes officiels pour répondre aux pétitions.
+        <p className="text-xs sm:text-sm text-neutral-455 mt-1.5 font-light">
+          {t("admin.user_subtitle")}
         </p>
       </div>
 
@@ -146,7 +163,7 @@ export default function AdminUsersPage() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Rechercher par nom, pseudo ou email..."
+          placeholder={locale === "fr" ? "Rechercher par nom, pseudo ou email..." : "Search by name, username or email..."}
           className="block w-full rounded-2xl border border-white/5 bg-neutral-950/40 py-3.5 pl-11 pr-4 text-sm text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 transition-all"
         />
       </div>
@@ -157,11 +174,11 @@ export default function AdminUsersPage() {
           <table className="min-w-full divide-y divide-white/5 text-left text-sm">
             <thead className="bg-neutral-950/50 text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-4 px-6">Utilisateur</th>
-                <th className="py-4 px-6">Adresse Email</th>
-                <th className="py-4 px-6">Rôle</th>
-                <th className="py-4 px-6">Statut Officiel</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Utilisateur" : "User"}</th>
+                <th className="py-4 px-6">{t("common.email")}</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Rôle" : "Role"}</th>
+                <th className="py-4 px-6">{locale === "fr" ? "Statut Officiel" : "Official Status"}</th>
+                <th className="py-4 px-6 text-right">{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 font-medium text-neutral-250">
@@ -201,7 +218,7 @@ export default function AdminUsersPage() {
                         ? "bg-green-500/10 border border-green-500/20 text-green-400"
                         : "bg-neutral-900 border border-white/5 text-neutral-500"
                     }`}>
-                      {u.role === "super_admin" ? "Super Admin" : u.role === "admin" ? "Admin" : "Membre"}
+                      {u.role === "super_admin" ? t("admin.role_super_admin") : u.role === "admin" ? t("admin.role_admin") : (locale === "fr" ? "Membre" : "Member")}
                     </span>
                   </td>
 
@@ -210,10 +227,10 @@ export default function AdminUsersPage() {
                     {u.isVerified ? (
                       <div className="flex items-center space-x-1.5 text-blue-400 font-bold text-xs bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full w-fit">
                         <HiCheckBadge className="text-sm flex-shrink-0" />
-                        <span className="truncate max-w-[120px]">{u.officialTitle || "Certifié"}</span>
+                        <span className="truncate max-w-[120px]">{u.officialTitle || (locale === "fr" ? "Certifié" : "Verified")}</span>
                       </div>
                     ) : (
-                      <span className="text-neutral-500 text-xs font-light italic">Non certifié</span>
+                      <span className="text-neutral-500 text-xs font-light italic">{locale === "fr" ? "Non certifié" : "Not Verified"}</span>
                     )}
                   </td>
 
@@ -229,7 +246,9 @@ export default function AdminUsersPage() {
                             : "border-green-500/20 text-green-400 hover:bg-green-500/10"
                         }`}
                       >
-                        {u.role === "admin" ? "Destituer Admin" : "Promouvoir Admin"}
+                        {u.role === "admin" 
+                          ? (locale === "fr" ? "Destituer Admin" : "Demote Admin") 
+                          : (locale === "fr" ? "Promouvoir Admin" : "Promote Admin")}
                       </button>
                     )}
 
@@ -237,16 +256,16 @@ export default function AdminUsersPage() {
                     {u.isVerified ? (
                       <button
                         onClick={() => handleRemoveVerification(u)}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-white/5 hover:border-red-500/20 hover:text-red-450 transition-all cursor-pointer text-neutral-450"
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-white/5 hover:border-red-500/20 hover:text-red-450 transition-all cursor-pointer text-neutral-455"
                       >
-                        Retirer Certification
+                        {locale === "fr" ? "Retirer Certification" : "Remove Verification"}
                       </button>
                     ) : (
                       <button
                         onClick={() => handleOpenVerifyModal(u)}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-white/5 hover:border-blue-500/20 hover:text-blue-400 transition-all cursor-pointer text-neutral-450"
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-white/5 hover:border-blue-500/20 hover:text-blue-400 transition-all cursor-pointer text-neutral-455"
                       >
-                        Certifier Officiel
+                        {locale === "fr" ? "Certifier Officiel" : "Verify Official"}
                       </button>
                     )}
                   </td>
@@ -257,7 +276,7 @@ export default function AdminUsersPage() {
               {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-neutral-500 italic">
-                    Aucun utilisateur trouvé.
+                    {locale === "fr" ? "Aucun utilisateur trouvé." : "No users found."}
                   </td>
                 </tr>
               )}
@@ -275,22 +294,27 @@ export default function AdminUsersPage() {
           >
             <div className="flex items-center space-x-2 text-blue-400">
               <HiCheckBadge className="text-2xl animate-pulse" />
-              <h3 className="text-lg font-extrabold text-white font-display">Certification Officielle</h3>
+              <h3 className="text-lg font-extrabold text-white font-display">
+                {locale === "fr" ? "Certification Officielle" : "Official Verification"}
+              </h3>
             </div>
 
             <p className="text-xs text-neutral-400 font-light leading-relaxed">
-              Vous allez certifier le profil de <span className="font-bold text-white">{verifyingUser.firstname} {verifyingUser.lastname}</span>.
-              Indiquez sa fonction officielle (elle s&apos;affichera à côté de ses réponses aux pétitions).
+              {locale === "fr" ? (
+                <>Vous allez certifier le profil de <span className="font-bold text-white">{verifyingUser.firstname} {verifyingUser.lastname}</span>. Indiquez sa fonction officielle (elle s&apos;affichera à côté de ses réponses aux pétitions).</>
+              ) : (
+                <>You are verifying the profile of <span className="font-bold text-white">{verifyingUser.firstname} {verifyingUser.lastname}</span>. Indicate their official title (it will display next to their responses to petitions).</>
+              )}
             </p>
 
             <div>
               <label htmlFor="title" className="block mb-2 text-xs font-semibold text-neutral-350 pl-1">
-                Titre Officiel
+                {locale === "fr" ? "Titre Officiel" : "Official Title"}
               </label>
               <Input
                 type="text"
                 id="title"
-                placeholder="Ex: Maire de Douala 1er, Ministre de la Transition..."
+                placeholder={locale === "fr" ? "Ex: Maire de Douala 1er, Ministre de la Transition..." : "Ex: Mayor of London, Minister of Transition..."}
                 value={officialTitle}
                 onChange={(e) => setOfficialTitle(e.target.value)}
                 required
@@ -305,10 +329,10 @@ export default function AdminUsersPage() {
                 className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
                 disabled={actionLoading}
               >
-                Annuler
+                {t("common.cancel")}
               </button>
               <ButtonClick
-                text={actionLoading ? "Enregistrement..." : "Confirmer la certification"}
+                text={actionLoading ? (locale === "fr" ? "Enregistrement..." : "Saving...") : (locale === "fr" ? "Confirmer la certification" : "Confirm Verification")}
                 classButton="rounded-full bg-blue-500 hover:bg-blue-600 text-neutral-950 text-xs font-extrabold shadow-md"
                 classArrow="hidden"
                 type="submit"
@@ -322,3 +346,4 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+

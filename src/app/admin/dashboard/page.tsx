@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+
 import {
   HiUsers,
   HiDocumentText,
@@ -13,8 +14,11 @@ import Link from "next/link";
 import { getPetitionsUseCase, getAllUsersUseCase } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
 import { User } from "../../../domain/entities/User";
+import { useLanguage, useT } from "../../../i18n/LanguageContext";
 
 export default function AdminDashboardPage() {
+  const { locale } = useLanguage();
+  const t = useT();
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +45,9 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-white">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
-        <p className="mt-4 text-xs text-neutral-450 italic">Calcul des statistiques de la plateforme...</p>
+        <p className="mt-4 text-xs text-neutral-455 italic">
+          {locale === "fr" ? "Calcul des statistiques de la plateforme..." : "Calculating platform statistics..."}
+        </p>
       </div>
     );
   }
@@ -60,30 +66,32 @@ export default function AdminDashboardPage() {
 
   const statsCards = [
     {
-      title: "Utilisateurs",
+      title: locale === "fr" ? "Utilisateurs" : "Users",
       value: totalUsers,
-      desc: "Profils enregistrés",
+      desc: locale === "fr" ? "Profils enregistrés" : "Registered profiles",
       icon: HiUsers,
       color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     },
     {
-      title: "Total Pétitions",
+      title: locale === "fr" ? "Total Pétitions" : "Total Petitions",
       value: totalPetitions,
-      desc: `${activePetitions} actives, ${victoryPetitions} victoires`,
+      desc: locale === "fr" 
+        ? `${activePetitions} actives, ${victoryPetitions} victoires`
+        : `${activePetitions} active, ${victoryPetitions} victories`,
       icon: HiDocumentText,
       color: "text-green-455 bg-green-500/10 border-green-500/20",
     },
     {
-      title: "Taux de Réussite",
+      title: locale === "fr" ? "Taux de Réussite" : "Success Rate",
       value: `${victoryRate}%`,
-      desc: "Pétitions remportées",
+      desc: locale === "fr" ? "Pétitions remportées" : "Petitions won",
       icon: HiTrophy,
       color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
     },
     {
-      title: "Signatures cumulées",
+      title: t("admin.stats_signatures"),
       value: totalSignatures,
-      desc: "Soutiens citoyens",
+      desc: locale === "fr" ? "Soutiens citoyens" : "Citizen support",
       icon: HiHeart,
       color: "text-red-400 bg-red-500/10 border-red-500/20",
     },
@@ -95,10 +103,12 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="border-b border-white/5 pb-6">
         <h1 className="text-3xl font-extrabold text-white font-display tracking-tight">
-          Tableau de Bord
+          {t("admin.dashboard")}
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-450 mt-1.5 font-light">
-          Aperçu global de l&apos;activité citoyenne et de la croissance d&apos;Apption.
+        <p className="text-xs sm:text-sm text-neutral-455 mt-1.5 font-light">
+          {locale === "fr" 
+            ? "Aperçu global de l'activité citoyenne et de la croissance d'Apption." 
+            : "Global overview of citizen activity and Apption growth."}
         </p>
       </div>
 
@@ -125,24 +135,28 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
         {/* Engagement Card */}
         <div className="glass-card p-6 sm:p-8 rounded-2xl border border-white/5 space-y-6">
-          <h3 className="font-extrabold text-lg text-white font-display">Taux d&apos;engagement</h3>
+          <h3 className="font-extrabold text-lg text-white font-display">
+            {locale === "fr" ? "Taux d'engagement" : "Engagement Rate"}
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <span className="text-neutral-400 text-xs sm:text-sm flex items-center space-x-2">
                 <HiEye className="text-neutral-500" />
-                <span>Vues globales</span>
+                <span>{locale === "fr" ? "Vues globales" : "Global Views"}</span>
               </span>
               <span className="font-bold text-sm text-white">{totalViews}</span>
             </div>
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <span className="text-neutral-400 text-xs sm:text-sm flex items-center space-x-2">
                 <HiDocumentText className="text-neutral-500" />
-                <span>Nombre de partages</span>
+                <span>{locale === "fr" ? "Nombre de partages" : "Number of shares"}</span>
               </span>
               <span className="font-bold text-sm text-white">{totalShares}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-neutral-400 text-xs sm:text-sm">Ratio signatures / vues</span>
+              <span className="text-neutral-400 text-xs sm:text-sm">
+                {locale === "fr" ? "Ratio signatures / vues" : "Signatures / views ratio"}
+              </span>
               <span className="font-bold text-sm text-green-455">
                 {totalViews > 0 ? `${Math.round((totalSignatures / totalViews) * 100)}%` : "0%"}
               </span>
@@ -153,8 +167,14 @@ export default function AdminDashboardPage() {
         {/* Quick Links Card */}
         <div className="glass-card p-6 sm:p-8 rounded-2xl border border-white/5 space-y-6 flex flex-col justify-between">
           <div>
-            <h3 className="font-extrabold text-lg text-white font-display mb-1.5">Raccourcis de Gestion</h3>
-            <p className="text-neutral-400 text-xs font-light">Accédez directement aux utilitaires de modération et d&apos;attribution de rôles.</p>
+            <h3 className="font-extrabold text-lg text-white font-display mb-1.5">
+              {locale === "fr" ? "Raccourcis de Gestion" : "Management Shortcuts"}
+            </h3>
+            <p className="text-neutral-400 text-xs font-light">
+              {locale === "fr" 
+                ? "Accédez directement aux utilitaires de modération et d'attribution de rôles." 
+                : "Directly access moderation and role allocation tools."}
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -162,14 +182,14 @@ export default function AdminDashboardPage() {
               href="/admin/users"
               className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 border border-white/5 hover:border-green-500/20 hover:bg-neutral-900/60 transition-all text-xs font-semibold text-white group"
             >
-              <span>Promouvoir des modérateurs ou comptes officiels</span>
+              <span>{locale === "fr" ? "Promouvoir des modérateurs ou comptes officiels" : "Promote moderators or official accounts"}</span>
               <HiArrowRight className="text-neutral-500 group-hover:text-green-500 transition-colors" />
             </Link>
             <Link
               href="/admin/petitions"
               className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 border border-white/5 hover:border-green-500/20 hover:bg-neutral-900/60 transition-all text-xs font-semibold text-white group"
             >
-              <span>Mettre en avant ou masquer des pétitions</span>
+              <span>{locale === "fr" ? "Mettre en avant ou masquer des pétitions" : "Feature or hide petitions"}</span>
               <HiArrowRight className="text-neutral-500 group-hover:text-green-500 transition-colors" />
             </Link>
           </div>
@@ -179,3 +199,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+

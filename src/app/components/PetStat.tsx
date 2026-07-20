@@ -1,17 +1,25 @@
 import React from "react";
 import { Petition } from "../../domain/entities/Petition";
 import { HiEye, HiShare, HiCheckCircle } from "react-icons/hi";
+import { useLanguage, useT } from "../../i18n/LanguageContext";
 
 interface PetStatProps {
   petitions: Petition[];
 }
 
 export default function PetStat({ petitions }: PetStatProps) {
+  const { locale } = useLanguage();
+  const t = useT();
+
   if (petitions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 glass-card rounded-2xl text-center text-neutral-400">
-        <p className="text-sm">Vous n&apos;avez pas encore lancé de pétition.</p>
-        <p className="text-xs text-neutral-500 mt-1">Créez votre première pétition pour suivre son impact ici !</p>
+        <p className="text-sm">{t("dashboard.no_petitions")}</p>
+        <p className="text-xs text-neutral-500 mt-1">
+          {locale === "fr" 
+            ? "Créez votre première pétition pour suivre son impact ici !" 
+            : "Create your first petition to track its impact here!"}
+        </p>
       </div>
     );
   }
@@ -45,9 +53,9 @@ export default function PetStat({ petitions }: PetStatProps) {
                   style={{ width: `${percent}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-neutral-450">
-                <span>{pet.signaturesCount} signataires</span>
-                <span>Objectif: {signatureGoal}</span>
+              <div className="flex justify-between text-[10px] text-neutral-455">
+                <span>{pet.signaturesCount} {locale === "fr" ? "signataires" : "signers"}</span>
+                <span>{locale === "fr" ? "Objectif" : "Goal"}: {signatureGoal}</span>
               </div>
             </div>
 
@@ -56,13 +64,13 @@ export default function PetStat({ petitions }: PetStatProps) {
               <div className="flex flex-col items-center justify-center space-y-1">
                 <HiEye className="text-neutral-500 text-lg" />
                 <p className="text-xs text-neutral-400 font-light">
-                  <span className="font-bold text-red-400 text-sm">{pet.views}</span> Vues
+                  <span className="font-bold text-red-400 text-sm">{pet.views}</span> {t("dashboard.views")}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center space-y-1">
                 <HiShare className="text-neutral-500 text-lg" />
                 <p className="text-xs text-neutral-400 font-light">
-                  <span className="font-bold text-red-400 text-sm">{pet.shares}</span> Partages
+                  <span className="font-bold text-red-400 text-sm">{pet.shares}</span> {t("dashboard.shares")}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center space-y-1">
@@ -75,7 +83,7 @@ export default function PetStat({ petitions }: PetStatProps) {
 
             {/* Share Link */}
             <div className="space-y-1.5">
-              <p className="text-xs font-bold text-neutral-350">Lien de partage :</p>
+              <p className="text-xs font-bold text-neutral-350">{locale === "fr" ? "Lien de partage :" : "Sharing link:"}</p>
               <div className="flex justify-between items-center bg-neutral-950/50 border border-white/5 px-4 py-2.5 rounded-full text-xs font-mono text-green-400 select-all overflow-hidden text-ellipsis">
                 <span className="truncate">{shareLink}</span>
               </div>
@@ -86,3 +94,4 @@ export default function PetStat({ petitions }: PetStatProps) {
     </div>
   );
 }
+
