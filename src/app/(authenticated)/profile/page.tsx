@@ -13,6 +13,8 @@ import PetItem from "../../components/PetItem";
 import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import { HiUser, HiLocationMarker, HiPencilAlt, HiCamera, HiBriefcase } from "react-icons/hi";
+import ImpactFeed from "../../components/ImpactFeed";
+import { useT } from "../../../i18n/LanguageContext";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -32,9 +34,10 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   
   // Lists state
+  const t = useT();
   const [createdPetitions, setCreatedPetitions] = useState<Petition[]>([]);
   const [signedPetitions, setSignedPetitions] = useState<Petition[]>([]);
-  const [activeTab, setActiveTab] = useState<"created" | "signed">("created");
+  const [activeTab, setActiveTab] = useState<"impact" | "created" | "signed">("impact");
   const [loadingLists, setLoadingLists] = useState(true);
 
   // Initialize fields
@@ -314,7 +317,17 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs Menu */}
-      <div className="border-b border-white/5 relative z-10 flex space-x-8 text-sm font-semibold">
+      <div className="border-b border-white/5 relative z-10 flex space-x-6 sm:space-x-8 text-sm font-semibold">
+        <button
+          onClick={() => setActiveTab("impact")}
+          className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs ${
+            activeTab === "impact"
+              ? "border-green-500 text-green-400 font-extrabold"
+              : "border-transparent text-neutral-500 hover:text-neutral-300"
+          }`}
+        >
+          ✨ {t("impact.tab_impact")}
+        </button>
         <button
           onClick={() => setActiveTab("created")}
           className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs ${
@@ -323,7 +336,7 @@ export default function ProfilePage() {
               : "border-transparent text-neutral-500 hover:text-neutral-300"
           }`}
         >
-          Mes Pétitions ({createdPetitions.length})
+          {t("dashboard.created_petitions")} ({createdPetitions.length})
         </button>
         <button
           onClick={() => setActiveTab("signed")}
@@ -333,7 +346,7 @@ export default function ProfilePage() {
               : "border-transparent text-neutral-500 hover:text-neutral-300"
           }`}
         >
-          Pétitions Soutenues ({signedPetitions.length})
+          {t("impact.stats_signed")} ({signedPetitions.length})
         </button>
       </div>
 
@@ -345,6 +358,8 @@ export default function ProfilePage() {
               <div key={n} className="animate-pulse bg-neutral-900/60 border border-white/5 rounded-2xl h-[280px] w-full max-w-[320px]" />
             ))}
           </div>
+        ) : activeTab === "impact" ? (
+          <ImpactFeed signedPetitions={signedPetitions} createdPetitions={createdPetitions} />
         ) : activeTab === "created" ? (
           createdPetitions.length === 0 ? (
             <div className="text-center py-16 text-neutral-500">

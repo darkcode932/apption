@@ -172,6 +172,13 @@ export class FirebasePetitionRepository implements PetitionRepository {
     country?: string
   ): Promise<void> {
     const docRef = doc(db, "petition", petitionId);
+    let modResult = { clean: true, reason: null as string | null, explanation: "No reason provided" };
+
+    if (reason && reason.trim()) {
+      modResult = await this.moderateText(reason, "signature_reason");
+    }
+
+    let signatureId = "";
 
     await runTransaction(db, async (transaction) => {
       const docSnap = await transaction.get(docRef);
@@ -190,6 +197,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
 
       // Add signature record to subcollection atomically
       const signatureDocRef = doc(collection(docRef, "signatures"));
+      signatureId = signatureDocRef.id;
+      
       transaction.set(signatureDocRef, {
         userId,
         userName,
@@ -197,6 +206,9 @@ export class FirebasePetitionRepository implements PetitionRepository {
         reason: reason || "",
         city: city || "",
         country: country || "",
+        status: modResult.clean ? "approved" : "flagged",
+        flagReason: modResult.reason,
+        flagExplanation: modResult.explanation,
       });
 
       // Update parent petition arrays and counter
@@ -222,6 +234,18 @@ export class FirebasePetitionRepository implements PetitionRepository {
         });
       }
     });
+
+    if (!modResult.clean && signatureId) {
+      await this.addGlobalFlaggedItem({
+        type: "signature",
+        petitionId,
+        itemId: signatureId,
+        authorName: userName,
+        text: reason || "",
+        flagReason: modResult.reason || "inappropriate",
+        explanation: modResult.explanation,
+      });
+    }
   }
 
   async incrementViews(petitionId: string): Promise<void> {
@@ -272,15 +296,33 @@ export class FirebasePetitionRepository implements PetitionRepository {
     userName: string,
     text: string
   ): Promise<Comment> {
+    const modResult = await this.moderateText(text, "comment");
+
     const commentData = {
       userId,
       userName,
       text,
       createdAt: Timestamp.now(),
+      status: modResult.clean ? "approved" : "flagged",
+      flagReason: modResult.reason,
+      flagExplanation: modResult.explanation,
     };
     const petitionDocRef = doc(db, "petition", petitionId);
     const commentColRef = collection(petitionDocRef, "comments");
     const docRef = await addDoc(commentColRef, commentData);
+
+    if (!modResult.clean) {
+      await this.addGlobalFlaggedItem({
+        type: "comment",
+        petitionId,
+        itemId: docRef.id,
+        authorName: userName,
+        text,
+        flagReason: modResult.reason || "inappropriate",
+        explanation: modResult.explanation,
+      });
+    }
+
     return {
       id: docRef.id,
       userId,
@@ -304,6 +346,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
         const comments: Comment[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
+          if (data.status === "flagged") return;
+
           let rawDate: Date;
           if (data.createdAt && typeof data.createdAt.toDate === "function") {
             rawDate = data.createdAt.toDate();
@@ -335,6 +379,9 @@ export class FirebasePetitionRepository implements PetitionRepository {
     petitionId: string,
     event: Omit<TimelineEvent, "id" | "createdAt">
   ): Promise<TimelineEvent> {
+    const combinedText = `${event.title}\n${event.description}`;
+    const modResult = await this.moderateText(combinedText, "timeline");
+
     const eventData = {
       authorId: event.authorId,
       authorName: event.authorName,
@@ -345,25 +392,42 @@ export class FirebasePetitionRepository implements PetitionRepository {
       description: event.description,
       type: event.type,
       createdAt: Timestamp.now(),
+      status: modResult.clean ? "approved" : "flagged",
+      flagReason: modResult.reason,
+      flagExplanation: modResult.explanation,
     };
     const petitionDocRef = doc(db, "petition", petitionId);
     const timelineColRef = collection(petitionDocRef, "timeline");
     const docRef = await addDoc(timelineColRef, eventData);
 
-    // Auto-dispatch notifications to all signers
-    try {
-      const petition = await this.getPetitionById(petitionId);
-      if (petition) {
-        const signers = petition.signatureUserIds || [];
-        const title = `Mise à jour : ${petition.title}`;
-        const message = `${event.authorName} a publié un nouveau jalon de négociation : "${event.title}".`;
-        const notifyPromises = signers
-          .filter((uid) => uid !== event.authorId)
-          .map((uid) => this.createNotification(uid, title, message, "milestone", petitionId));
-        await Promise.all(notifyPromises);
+    if (!modResult.clean) {
+      await this.addGlobalFlaggedItem({
+        type: "timeline",
+        petitionId,
+        itemId: docRef.id,
+        authorName: event.authorName,
+        text: combinedText,
+        flagReason: modResult.reason || "inappropriate",
+        explanation: modResult.explanation,
+      });
+    }
+
+    // Auto-dispatch notifications to all signers (only if clean/approved)
+    if (modResult.clean) {
+      try {
+        const petition = await this.getPetitionById(petitionId);
+        if (petition) {
+          const signers = petition.signatureUserIds || [];
+          const title = `Mise à jour : ${petition.title}`;
+          const message = `${event.authorName} a publié un nouveau jalon de négociation : "${event.title}".`;
+          const notifyPromises = signers
+            .filter((uid) => uid !== event.authorId)
+            .map((uid) => this.createNotification(uid, title, message, "milestone", petitionId));
+          await Promise.all(notifyPromises);
+        }
+      } catch (e) {
+        console.warn("Failed to dispatch timeline notifications:", e);
       }
-    } catch (e) {
-      console.warn("Failed to dispatch timeline notifications:", e);
     }
 
     return {
@@ -387,6 +451,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
         const events: TimelineEvent[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
+          if (data.status === "flagged") return;
+
           let rawDate: Date;
           if (data.createdAt && typeof data.createdAt.toDate === "function") {
             rawDate = data.createdAt.toDate();
@@ -561,6 +627,8 @@ export class FirebasePetitionRepository implements PetitionRepository {
         const sigs: Signature[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
+          if (data.status === "flagged") return;
+
           let rawDate = new Date();
           if (data.signedAt && typeof data.signedAt.toDate === "function") {
             rawDate = data.signedAt.toDate();
@@ -651,5 +719,189 @@ export class FirebasePetitionRepository implements PetitionRepository {
       createdAt: Timestamp.now(),
     };
     await addDoc(collection(db, "notifications"), notifData);
+  }
+
+  // AI Semantic Moderation Methods implementation
+  private async moderateText(
+    text: string,
+    type: "comment" | "timeline" | "signature_reason"
+  ): Promise<{ clean: boolean; reason: string | null; explanation: string }> {
+    try {
+      const res = await fetch("/api/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, type }),
+      });
+      if (!res.ok) throw new Error("API error");
+      return await res.json();
+    } catch (e) {
+      console.warn("AI Moderation failed, using fallback:", e);
+      return { clean: true, reason: null, explanation: "Approved by local fallback." };
+    }
+  }
+
+  private async addGlobalFlaggedItem(data: {
+    type: "comment" | "timeline" | "signature";
+    petitionId: string;
+    itemId: string;
+    authorName: string;
+    text: string;
+    flagReason: string;
+    explanation: string;
+  }): Promise<void> {
+    try {
+      await addDoc(collection(db, "flagged_items"), {
+        ...data,
+        status: "flagged",
+        createdAt: Timestamp.now(),
+      });
+    } catch (e) {
+      console.error("Failed to add global flagged item:", e);
+    }
+  }
+
+  async getFlaggedComments(): Promise<any[]> {
+    const q = query(
+      collection(db, "flagged_items"),
+      where("type", "==", "comment"),
+      where("status", "==", "flagged")
+    );
+    const snap = await getDocs(q);
+    const items: any[] = [];
+    snap.forEach((docSnap) => {
+      items.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return items;
+  }
+
+  async getFlaggedTimelineEvents(): Promise<any[]> {
+    const q = query(
+      collection(db, "flagged_items"),
+      where("type", "==", "timeline"),
+      where("status", "==", "flagged")
+    );
+    const snap = await getDocs(q);
+    const items: any[] = [];
+    snap.forEach((docSnap) => {
+      items.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return items;
+  }
+
+  async getFlaggedSignatures(): Promise<any[]> {
+    const q = query(
+      collection(db, "flagged_items"),
+      where("type", "==", "signature"),
+      where("status", "==", "flagged")
+    );
+    const snap = await getDocs(q);
+    const items: any[] = [];
+    snap.forEach((docSnap) => {
+      items.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return items;
+  }
+
+  async approveComment(petitionId: string, commentId: string): Promise<void> {
+    const commentRef = doc(db, "petition", petitionId, "comments", commentId);
+    await updateDoc(commentRef, { status: "approved" });
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", commentId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
+  }
+
+  async rejectComment(petitionId: string, commentId: string): Promise<void> {
+    const commentRef = doc(db, "petition", petitionId, "comments", commentId);
+    await deleteDoc(commentRef);
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", commentId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
+  }
+
+  async approveTimelineEvent(petitionId: string, eventId: string): Promise<void> {
+    const eventRef = doc(db, "petition", petitionId, "timeline", eventId);
+    await updateDoc(eventRef, { status: "approved" });
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", eventId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
+  }
+
+  async rejectTimelineEvent(petitionId: string, eventId: string): Promise<void> {
+    const eventRef = doc(db, "petition", petitionId, "timeline", eventId);
+    await deleteDoc(eventRef);
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", eventId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
+  }
+
+  async approveSignature(petitionId: string, signatureId: string): Promise<void> {
+    const sigRef = doc(db, "petition", petitionId, "signatures", signatureId);
+    await updateDoc(sigRef, { status: "approved" });
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", signatureId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
+  }
+
+  async rejectSignature(petitionId: string, signatureId: string): Promise<void> {
+    const sigRef = doc(db, "petition", petitionId, "signatures", signatureId);
+    const sigSnap = await getDoc(sigRef);
+    if (sigSnap.exists()) {
+      const sigData = sigSnap.data();
+      const userId = sigData.userId;
+      const userName = sigData.userName;
+      
+      const petitionRef = doc(db, "petition", petitionId);
+      const petitionSnap = await getDoc(petitionRef);
+      if (petitionSnap.exists()) {
+        const petitionData = petitionSnap.data();
+        const userIds = (petitionData.signatureUserIds || []).filter((id: string) => id !== userId);
+        const names = (petitionData.signatureNames || []).filter((n: string) => n !== userName);
+        await updateDoc(petitionRef, {
+          signatureUserIds: userIds,
+          signatureNames: names,
+          signaturesCount: increment(-1)
+        });
+      }
+    }
+    await deleteDoc(sigRef);
+
+    const q = query(
+      collection(db, "flagged_items"),
+      where("itemId", "==", signatureId),
+      where("petitionId", "==", petitionId)
+    );
+    const snap = await getDocs(q);
+    const promises = snap.docs.map((docSnap) => deleteDoc(doc(db, "flagged_items", docSnap.id)));
+    await Promise.all(promises);
   }
 }

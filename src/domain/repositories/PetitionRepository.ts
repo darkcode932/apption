@@ -115,4 +115,18 @@ export interface PetitionRepository {
     type: string,
     petitionId: string
   ): Promise<void>;
+
+  // AI Semantic Moderation Methods
+  getFlaggedComments(): Promise<any[]>;
+  getFlaggedTimelineEvents(): Promise<any[]>;
+  getFlaggedSignatures(): Promise<any[]>;
+
+  approveComment(petitionId: string, commentId: string): Promise<void>;
+  rejectComment(petitionId: string, commentId: string): Promise<void>;
+
+  approveTimelineEvent(petitionId: string, eventId: string): Promise<void>;
+  rejectTimelineEvent(petitionId: string, eventId: string): Promise<void>;
+
+  approveSignature(petitionId: string, signatureId: string): Promise<void>;
+  rejectSignature(petitionId: string, signatureId: string): Promise<void>;
 }

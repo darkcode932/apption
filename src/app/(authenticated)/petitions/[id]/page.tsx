@@ -12,7 +12,9 @@ import {
   HiSparkles,
   HiCheckBadge,
   HiTrophy,
+  HiEnvelope,
 } from "react-icons/hi2";
+import { FaTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
   signPetitionUseCase,
@@ -27,11 +29,14 @@ import { Comment } from "../../../../domain/entities/Comment";
 import { TimelineEvent } from "../../../../domain/entities/TimelineEvent";
 import { Signature } from "../../../../domain/entities/Signature";
 import ButtonClick from "../../../components/ButtonClick";
+import { useLanguage, useT } from "../../../../i18n/LanguageContext";
 
 export default function PetitionDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const t = useT();
+  const { locale } = useLanguage();
   
   const id = params.id as string;
 
@@ -41,6 +46,7 @@ export default function PetitionDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [viewIncremented, setViewIncremented] = useState(false);
@@ -244,7 +250,11 @@ export default function PetitionDetailsPage() {
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
+    setShowShareModal(true);
+  };
+
+  const handleCopyLink = async () => {
     if (!petition) return;
     try {
       const shareUrl = window.location.href;
@@ -252,10 +262,15 @@ export default function PetitionDetailsPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       
-      await petitionRepository.incrementShares(petition.id);
+      await petitionRepository.incrementShares(petition.id).catch(console.error);
     } catch (err) {
       console.error("Failed to copy link:", err);
     }
+  };
+
+  const handleSocialClick = async () => {
+    if (!petition) return;
+    await petitionRepository.incrementShares(petition.id).catch(console.error);
   };
 
   if (loading) {
@@ -817,6 +832,116 @@ export default function PetitionDetailsPage() {
               />
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0b0f]/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6 relative z-50">
+            
+            {/* Header */}
+            <div className="flex items-center space-x-2 text-green-400">
+              <HiShare className="text-2xl" />
+              <h3 className="text-lg font-extrabold text-white font-display">
+                {t("petitions.share_modal_title")}
+              </h3>
+            </div>
+
+            {/* Instruction */}
+            <p className="text-xs text-neutral-400 font-light leading-relaxed">
+              {t("petitions.share_modal_subtitle")}
+            </p>
+
+            {/* Copyable Input and Button */}
+            <div className="flex items-center space-x-2 bg-neutral-950/40 p-2.5 rounded-2xl border border-white/5">
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== "undefined" ? window.location.href : ""}
+                className="bg-transparent border-0 focus:outline-none focus:ring-0 text-xs text-neutral-300 w-full px-2 select-all font-light"
+              />
+              <button
+                onClick={handleCopyLink}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  copied
+                    ? "bg-green-500/20 text-green-400 border border-green-500/20"
+                    : "bg-green-500 text-neutral-950 hover:bg-green-600 border border-transparent shadow-md"
+                }`}
+              >
+                {copied ? t("petitions.share_copied") : t("petitions.share_copy")}
+              </button>
+            </div>
+
+            {/* Social Icons Grid */}
+            <div className="grid grid-cols-4 gap-3 pt-2">
+              {/* Twitter */}
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                  typeof window !== "undefined" ? window.location.href : ""
+                )}&text=${encodeURIComponent(petition.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleSocialClick}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-400/30 hover:bg-blue-400/5 hover:text-blue-400 text-neutral-350 transition-all cursor-pointer group"
+              >
+                <FaTwitter className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Twitter</span>
+              </a>
+
+              {/* Facebook */}
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                  typeof window !== "undefined" ? window.location.href : ""
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleSocialClick}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-600/30 hover:bg-blue-600/5 hover:text-blue-500 text-neutral-350 transition-all cursor-pointer group"
+              >
+                <FaFacebook className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Facebook</span>
+              </a>
+
+              {/* WhatsApp */}
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  petition.title + " - " + (typeof window !== "undefined" ? window.location.href : "")
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleSocialClick}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-green-500/30 hover:bg-green-500/5 hover:text-green-400 text-neutral-350 transition-all cursor-pointer group"
+              >
+                <FaWhatsapp className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">WhatsApp</span>
+              </a>
+
+              {/* Email */}
+              <a
+                href={`mailto:?subject=${encodeURIComponent(petition.title)}&body=${encodeURIComponent(
+                  (locale === "fr" ? "Découvrez cette pétition sur Apption : " : "Check out this petition on Apption: ") +
+                    (typeof window !== "undefined" ? window.location.href : "")
+                )}`}
+                onClick={handleSocialClick}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-red-500/30 hover:bg-red-500/5 hover:text-red-400 text-neutral-350 transition-all cursor-pointer group"
+              >
+                <HiEnvelope className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Email</span>
+              </a>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end pt-3">
+              <button
+                type="button"
+                onClick={() => setShowShareModal(false)}
+                className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
+              >
+                {t("petitions.share_close")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

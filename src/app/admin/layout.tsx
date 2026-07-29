@@ -11,6 +11,7 @@ import {
   HiBars3,
   HiXMark,
   HiArrowUpRight,
+  HiShieldCheck,
 } from "react-icons/hi2";
 import { useAuth } from "../contexts/AuthContext";
 import { signOutUseCase } from "../../infrastructure/ServiceLocator";
@@ -46,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/dashboard", name: t("admin.dashboard"), icon: HiChartBar },
     { href: "/admin/users", name: t("admin.users"), icon: HiUsers },
     { href: "/admin/petitions", name: t("admin.petitions"), icon: HiDocumentText },
+    { href: "/admin/moderation", name: t("admin.moderation"), icon: HiShieldCheck },
   ];
 
 

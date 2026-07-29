@@ -28,6 +28,7 @@ export default function Navbar() {
     { name: t("navbar.dashboard"), href: "/dashboard" },
     { name: t("navbar.launch"), href: "/launch-petition" },
     { name: t("navbar.browse"), href: "/petitions" },
+    { name: t("navbar.map"), href: "/map" },
     { name: t("navbar.my_petitions"), href: "/my-petitions" },
   ];
 

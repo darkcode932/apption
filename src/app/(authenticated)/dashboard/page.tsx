@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { HiSparkles, HiArrowRight } from "react-icons/hi2";
 
 import Profile from "../../components/Profile";
 import PetStat from "../../components/PetStat";
@@ -47,6 +49,27 @@ export default function DashboardPage() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-green-400 tracking-tight mb-8 font-display">
           {t("dashboard.title")}
         </h1>
+
+        {/* Impact Feed Shortcut Banner */}
+        <Link
+          href="/profile"
+          className="mb-8 p-4 sm:p-5 rounded-2xl border border-green-500/20 bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-transparent flex items-center justify-between hover:border-green-500/40 transition-all group"
+        >
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3 rounded-xl bg-green-500/20 text-green-400">
+              <HiSparkles className="text-xl" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white font-display group-hover:text-green-400 transition-colors">
+                {t("impact.title")}
+              </h3>
+              <p className="text-xs text-neutral-400 font-light">
+                {t("impact.subtitle")}
+              </p>
+            </div>
+          </div>
+          <HiArrowRight className="text-neutral-400 group-hover:text-green-400 group-hover:translate-x-1 transition-all text-lg flex-shrink-0" />
+        </Link>
         
         <div className="space-y-6">
           <div className="flex items-center space-x-2.5">
