@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { PetBotLLMEngine, PetBotMessage } from "../../../infrastructure/ai/PetBotLLMEngine";
+import { PetBotAgentEngine, PetBotMessage } from "../../../infrastructure/ai/PetBotAgentEngine";
+import { petitionRepository } from "../../../infrastructure/ServiceLocator";
 
 export async function POST(request: Request) {
   let lang = "fr";
@@ -21,41 +22,28 @@ export async function POST(request: Request) {
     const lastMessage = messages[messages.length - 1]?.content || "";
     const isEn = lang === "en";
 
-    // 1. ALWAYS TRY GEMINI LLM MODEL FIRST IF API KEY IS CONFIGURED
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey) {
+    // Fetch Live Petitions Data for RAG Context
+    let livePetitionsData: any[] = [];
+    try {
+      livePetitionsData = await petitionRepository.getAllPetitions();
+    } catch (dbErr) {
+      console.warn("RAG Live petitions fetch fallback:", dbErr);
+    }
+
+    // 1. TRY GEMINI API IF VALID GEMINI KEY FORMAT (AIzaSy...)
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (apiKey && apiKey.startsWith("AIzaSy")) {
       try {
+        const victoriesCount = livePetitionsData.filter((p) => p.status === "victory").length;
         const systemInstruction = isEn
-          ? `You are PetBot 🐾, the official AI assistant of Apption, the global platform for citizen petition campaigns.
-Your main goals are:
-1. Help users understand how Apption works (how to sign, launch, and share petitions).
-2. Guide users in writing and optimizing their own petitions.
-3. Suggest clear strategies to increase signatures and reach targets.
-4. Explain features like the Interactive Impact Map (/map), AI Copilot, Semantic Moderation, and Civic Impact Badges.
-
-Apption features:
-- "Dashboard": tracks stats (views, shares, signatures count).
-- "Launch a petition": 3 steps: 1) Scale (City, National, International), 2) Category (Politics, Education, Sports, Art, Health, Human Rights, Environment, Others), 3) Title, Description, Image.
-- "Impact Map": interactive GIS map (/map) showing Citizen Victories 🏆 and Active Petitions 🔥.
-- "My Impact": profile tab showing unlocked badges (Engaged Citizen, Cause Pillar, Ambassador of Change, Vector of Victory).
-- "Admin Dashboard": moderates petitions, users, and AI flagged items.
-
-Keep your tone engaging, friendly, clear, and mobilizing. Answer in English. Avoid technical jargon. Proactively offer tailored petition tips. Use markdown formatting (bolding, lists).`
-          : `Tu es PetBot 🐾, l'assistant IA officiel d'Apption, la plateforme mondiale de pétitions citoyennes.
-Tes objectifs principaux :
-1. Aider les utilisateurs à comprendre comment fonctionne Apption (comment signer, lancer, et partager une pétition).
-2. Guider les utilisateurs pour rédiger et optimiser leurs propres pétitions.
-3. Suggérer des stratégies claires pour récolter plus de signatures et atteindre les cibles.
-4. Expliquer les fonctionnalités comme la Carte Interactive d'Impact (/map), le Copilote IA, la Modération Sémantique et les Badges Citoyens.
-
-Fonctionnalités d'Apption :
-- "Tableau de Bord" : suit les statistiques (vues, partages, nombre de signatures).
-- "Lancer une pétition" : 3 étapes : 1) Échelle (Ville, National, International), 2) Catégorie (Politique, Éducation, Sport, Art, Santé, Droits de l'homme, Environnement, Autres), 3) Titre, Description, Image.
-- "Carte d'Impact" : carte GIS interactive (/map) montrant les Victoires Citoyennes 🏆 et les pétitions actives 🔥.
-- "Mon Impact" : onglet du profil affichant les badges débloqués (Citoyen Engagé, Pilier de la Cause, Ambassadeur du Changement, Vecteur de Victoire).
-- "Tableau de Bord Admin" : modère les pétitions, les utilisateurs et les éléments signalés par l'IA.
-
-Garde un ton engageant, amical, clair et mobilisateur. Réponds toujours en français. Évite le jargon technique. Propose activement des conseils sur mesure pour optimiser la pétition de l'utilisateur. Utilise le formatage markdown (gras, listes à puces).`;
+          ? `You are PetBot AI 🐾, the autonomous campaign intelligence agent of Apption.
+Your mission is to think, reason, draft complete petition copy, suggest viral growth strategies, and provide expert guidance on citizen activism.
+Live Platform Knowledge: Apption has ${livePetitionsData.length} total petitions and ${victoriesCount} citizen victories on the Interactive Impact Map (/map).
+Format responses with clean Markdown, bold headers, bullet points, and actionable steps.`
+          : `Tu es PetBot IA 🐾, l'agent d'intelligence citoyenne autonome d'Apption.
+Ta mission est de réfléchir, de raisonner, de rédiger des pétitions complètes, de proposer des stratégies de croissance virale et de fournir une expertise de haut niveau en mobilisation citoyenne.
+Données en direct : Apption compte ${livePetitionsData.length} pétitions et ${victoriesCount} victoires citoyennes géolocalisées sur la Carte d'Impact (/map).
+Formate tes réponses avec un markdown propre, des titres en gras, des listes à puces et des étapes concrètes.`;
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
@@ -68,28 +56,34 @@ Garde un ton engageant, amical, clair et mobilisateur. Réponds toujours en fran
           parts: [{ text: msg.content }],
         }));
 
-        const chat = model.startChat({
-          history: history,
-        });
-
+        const chat = model.startChat({ history });
         const result = await chat.sendMessage(lastMessage);
         const responseText = result.response.text();
 
         if (responseText && responseText.trim()) {
           return NextResponse.json({ response: responseText });
         }
-      } catch (geminiError) {
-        console.warn("Gemini API call failed, delegating to PetBotLLMEngine:", geminiError);
+      } catch (geminiErr) {
+        console.warn("Gemini call failed, switching to PetBotAgentEngine:", geminiErr);
       }
     }
 
-    // 2. FALLBACK TO PETBOT GENERATIVE AI ENGINE (Local NLP Synthesis)
-    const generatedResponse = PetBotLLMEngine.generateResponse(messages, lang);
-    return NextResponse.json({ response: generatedResponse });
+    // 2. PETBOT AUTONOMOUS AI AGENT ENGINE (Neural Reasoning + Live RAG)
+    const agentResponse = await PetBotAgentEngine.generateAgentResponse(
+      messages,
+      lang,
+      livePetitionsData
+    );
+
+    return NextResponse.json({ response: agentResponse });
 
   } catch (error: any) {
     console.error("PetBot API route error:", error);
-    const generatedResponse = PetBotLLMEngine.generateResponse(messages, lang);
-    return NextResponse.json({ response: generatedResponse });
+    const agentResponse = await PetBotAgentEngine.generateAgentResponse(
+      messages,
+      lang,
+      []
+    );
+    return NextResponse.json({ response: agentResponse });
   }
 }
