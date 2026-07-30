@@ -254,6 +254,11 @@ export default function PetitionsListPage() {
               text={pet.title}
               link={pet.imageUrl || "/assets/images/libération.jpg"}
               status={pet.status}
+              signaturesCount={pet.signaturesCount}
+              category={pet.category}
+              city={pet.city}
+              scale={pet.scale}
+              creatorName={pet.creatorName}
             />
           ))}
         </div>

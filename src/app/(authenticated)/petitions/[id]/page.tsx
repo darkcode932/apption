@@ -13,6 +13,10 @@ import {
   HiCheckBadge,
   HiTrophy,
   HiEnvelope,
+  HiMapPin,
+  HiFire,
+  HiPaperAirplane,
+  HiLink,
 } from "react-icons/hi2";
 import { FaTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -24,7 +28,6 @@ import {
   declareVictoryUseCase,
 } from "../../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../../domain/entities/Petition";
-import { Input } from "../../../components/Input";
 import { Comment } from "../../../../domain/entities/Comment";
 import { TimelineEvent } from "../../../../domain/entities/TimelineEvent";
 import { Signature } from "../../../../domain/entities/Signature";
@@ -52,8 +55,8 @@ export default function PetitionDetailsPage() {
   const [viewIncremented, setViewIncremented] = useState(false);
   
   // Tab State
-  const [activeLeftTab, setActiveLeftTab] = useState<"discussion" | "timeline" | "signatures">(
-    "discussion"
+  const [activeLeftTab, setActiveLeftTab] = useState<"cause" | "discussion" | "timeline" | "signatures">(
+    "cause"
   );
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [showSignModal, setShowSignModal] = useState(false);
@@ -112,7 +115,7 @@ export default function PetitionDetailsPage() {
     return () => unsubscribe();
   }, [id]);
 
-  // Real-time listener for signatures list
+  // Real-time listener for signatures
   useEffect(() => {
     if (!id) return;
 
@@ -123,54 +126,97 @@ export default function PetitionDetailsPage() {
     return () => unsubscribe();
   }, [id]);
 
-  // Increment views once when petition first loads
+  // Increment views once per mount
   useEffect(() => {
-    if (petition && !viewIncremented) {
+    if (id && !viewIncremented) {
       petitionRepository.incrementViews(id).catch(console.error);
       setViewIncremented(true);
     }
-  }, [petition, viewIncremented, id]);
+  }, [id, viewIncremented]);
 
-  const handleSign = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!user || !petition) return;
+  const hasSigned = user && petition?.signatureUserIds?.includes(user.id);
+  const isOwner = user && petition && user.id === petition.createdBy;
+  const isVictory = petition?.status === "victory";
+
+  const nextGoal = Math.max(100, Math.ceil((petition?.signaturesCount || 1) / 100) * 100);
+  const progressPercent = Math.min(100, Math.round(((petition?.signaturesCount || 1) / nextGoal) * 100));
+
+  const handleSignConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!petition) return;
+
     setSigning(true);
     setSignError(null);
+
     try {
-      const displayName = user.username || `${user.firstname} ${user.lastname}`;
-      const userCity = user.city || "";
-      const userCountry = user.country || "";
       await signPetitionUseCase.execute(
         petition.id,
         user.id,
-        displayName,
-        signReason.trim() || undefined,
-        userCity || undefined,
-        userCountry || undefined
+        user.firstname ? `${user.firstname} ${user.lastname}` : user.username || user.email,
+        signReason,
+        user.city,
+        user.country
       );
       setShowSignModal(false);
       setSignReason("");
     } catch (err: any) {
-      console.error("Signing error:", err);
-      setSignError(err?.message || "Une erreur est survenue lors de la signature.");
+      setSignError(err.message || "Erreur lors de la signature.");
     } finally {
       setSigning(false);
     }
   };
 
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      petitionRepository.incrementShares(id).catch(console.error);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleSocialShare = (platform: "twitter" | "facebook" | "whatsapp" | "email") => {
+    if (typeof window === "undefined" || !petition) return;
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(`Soutenez la pétition : "${petition.title}" sur Apption !`);
+
+    let shareUrl = "";
+    if (platform === "twitter") shareUrl = `https://twitter.com/intent/tweet?text=${title}&url=${url}`;
+    if (platform === "facebook") shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    if (platform === "whatsapp") shareUrl = `https://api.whatsapp.com/send?text=${title}%20${url}`;
+    if (platform === "email") shareUrl = `mailto:?subject=${title}&body=${url}`;
+
+    if (shareUrl) {
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+      petitionRepository.incrementShares(id).catch(console.error);
+    }
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !commentText.trim()) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!commentText.trim()) return;
 
     setCommenting(true);
     setCommentError(null);
+
     try {
-      const displayName = user.username || `${user.firstname} ${user.lastname}`;
-      await addCommentUseCase.execute(id, user.id, displayName, commentText.trim());
+      await addCommentUseCase.execute(
+        id,
+        user.id,
+        user.firstname ? `${user.firstname} ${user.lastname}` : user.username || user.email,
+        commentText
+      );
       setCommentText("");
     } catch (err: any) {
-      console.error("Comment error:", err);
-      setCommentError("Une erreur est survenue lors de la publication du commentaire.");
+      setCommentError(err.message || "Erreur lors de l'envoi du commentaire.");
     } finally {
       setCommenting(false);
     }
@@ -178,772 +224,458 @@ export default function PetitionDetailsPage() {
 
   const handleAddTimelineEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !eventTitle.trim() || !eventDesc.trim() || !petition) return;
+    if (!user) return;
+    if (!eventTitle.trim() || !eventDesc.trim()) return;
 
     setEventPosting(true);
     setEventError(null);
-
-    const isCreator = user.id === petition.createdBy;
-    const isVerified = !!user.isVerified;
-
-    // Set correct event type based on user profile
-    const finalType = isCreator && eventType === "milestone" 
-      ? "milestone" 
-      : isVerified 
-      ? "official_response" 
-      : "milestone";
 
     try {
       await addTimelineEventUseCase.execute(id, {
         petitionId: id,
         authorId: user.id,
-        authorName: `${user.firstname} ${user.lastname}`,
-        authorAvatarUrl: user.avatarUrl || "",
-        officialTitle: user.officialTitle || "",
-        isOfficialResponse: isVerified,
-        title: eventTitle.trim(),
-        description: eventDesc.trim(),
-        type: finalType,
+        authorName: user.firstname ? `${user.firstname} ${user.lastname}` : user.username || user.email,
+        title: eventTitle,
+        description: eventDesc,
+        type: eventType,
+        isOfficialResponse: eventType === "official_response",
       });
-
       setEventTitle("");
       setEventDesc("");
     } catch (err: any) {
-      console.error("Timeline event error:", err);
-      setEventError("Une erreur est survenue lors de la publication de la mise à jour.");
+      setEventError(err.message || "Erreur lors de l'ajout de l'actualité.");
     } finally {
       setEventPosting(false);
     }
   };
 
   const handleDeclareVictory = async () => {
-    if (!user || !petition || user.id !== petition.createdBy) return;
-
-    if (!confirm("Voulez-vous vraiment déclarer cette pétition comme remportée ?")) {
-      return;
-    }
+    if (!confirm("Félicitations ! Voulez-vous vraiment déclarer cette pétition comme VICTOIRE ?")) return;
 
     setDeclaringVictory(true);
     try {
-      // 1. Declare victory in petition document
       await declareVictoryUseCase.execute(id);
-
-      // 2. Publish automatic Victory Milestone event on timeline
-      await addTimelineEventUseCase.execute(id, {
-        petitionId: id,
-        authorId: user.id,
-        authorName: `${user.firstname} ${user.lastname}`,
-        authorAvatarUrl: user.avatarUrl || "",
-        officialTitle: "Créateur de la pétition",
-        isOfficialResponse: false,
-        title: "🏆 Victoire Citoyenne !",
-        description: "Nous avons atteint notre but ! Merci infiniment à tous les signataires et supporters pour votre dévouement exceptionnel.",
-        type: "victory",
-      });
-
-      setActiveLeftTab("timeline");
     } catch (err: any) {
-      console.error("Victory declaration error:", err);
-      alert("Erreur lors de la déclaration de victoire.");
+      alert(err.message || "Erreur lors de la déclaration de victoire.");
     } finally {
       setDeclaringVictory(false);
     }
   };
 
-  const handleShare = () => {
-    setShowShareModal(true);
-  };
-
-  const handleCopyLink = async () => {
-    if (!petition) return;
-    try {
-      const shareUrl = window.location.href;
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      
-      await petitionRepository.incrementShares(petition.id).catch(console.error);
-    } catch (err) {
-      console.error("Failed to copy link:", err);
-    }
-  };
-
-  const handleSocialClick = async () => {
-    if (!petition) return;
-    await petitionRepository.incrementShares(petition.id).catch(console.error);
-  };
-
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-128px)] bg-[#0b0b0f] text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-400"></div>
-        <p className="mt-4 text-neutral-450 text-sm">Chargement de la pétition...</p>
+      <div className="max-w-7xl mx-auto px-4 py-16 w-full flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
+          <p className="text-xs text-neutral-400 font-mono">Chargement de la pétition...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !petition) {
     return (
-      <div className="max-w-xl mx-auto w-full px-4 py-16 text-center flex flex-col items-center justify-center min-h-[calc(100vh-128px)]">
-        <p className="text-red-400 font-bold text-xl">{error || "Pétition introuvable"}</p>
-        <button
-          onClick={() => router.push("/home")}
-          className="mt-6 flex items-center space-x-2 text-neutral-350 hover:text-white bg-neutral-900 border border-white/5 px-6 py-2.5 rounded-full transition-all text-sm font-semibold"
-        >
-          <HiArrowLeft />
-          <span>Retour à l&apos;accueil</span>
-        </button>
+      <div className="max-w-7xl mx-auto px-4 py-16 w-full flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+        <HiExclamationCircle className="text-5xl text-red-500" />
+        <h2 className="text-xl font-extrabold text-white">{error || "Pétition introuvable"}</h2>
+        <ButtonClick text="Retour aux pétitions" onClick={() => router.push("/petitions")} />
       </div>
     );
   }
 
-  const hasSigned = user ? petition.signatureUserIds.includes(user.id) : false;
-  const signatureGoal = 100;
-  const percent = Math.min((petition.signaturesCount / signatureGoal) * 100, 100);
-  
-  const isCreator = user ? user.id === petition.createdBy : false;
-  const isVerifiedOfficial = user ? !!user.isVerified : false;
-  const isVictory = petition.status === "victory";
-
   return (
-    <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex flex-col space-y-8 relative overflow-hidden">
+    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 relative overflow-hidden">
       
-      {/* Background decorations */}
-      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-green-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Victory Celebration Header Banner */}
-      {isVictory && (
-        <div className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-r from-yellow-600/20 via-amber-500/20 to-yellow-600/20 border border-yellow-500/30 flex flex-col sm:flex-row items-center sm:justify-between gap-4 z-10 animate-pulse">
-          <div className="flex items-center space-x-3.5 text-center sm:text-left">
-            <div className="h-12 w-12 rounded-2xl bg-yellow-500 flex items-center justify-center text-neutral-950 text-2xl shadow-lg">
-              <HiTrophy />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-white text-lg font-display">Victoire Citoyenne !</h3>
-              <p className="text-xs text-amber-200/80 font-light mt-0.5">Cette pétition a atteint son objectif et a été remportée avec succès.</p>
-            </div>
-          </div>
-          <span className="px-4 py-1.5 bg-yellow-500 text-neutral-950 font-extrabold rounded-full text-xs uppercase tracking-wider">
-            Remportée
-          </span>
-        </div>
-      )}
-
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="self-start flex items-center space-x-2 text-neutral-450 hover:text-white transition-colors text-sm font-semibold"
+        className="inline-flex items-center space-x-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer"
       >
-        <HiArrowLeft />
+        <HiArrowLeft className="text-sm" />
         <span>Retour</span>
       </button>
 
-      {/* Main Container */}
-      <div className="flex flex-col lg:flex-row gap-10 items-start relative z-10">
+      {/* Dribbble-Grade Hero Header */}
+      <div className="relative glass-card p-6 sm:p-10 rounded-3xl border border-white/10 overflow-hidden shadow-2xl space-y-6">
         
-        {/* Left Side: Details, Discussion, & Timeline */}
-        <div className="w-full lg:w-2/3 flex flex-col space-y-8">
-          
-          {/* Main petition body */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <span className="self-start px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-full uppercase tracking-wider">
-                {petition.category} • {petition.scale}
-              </span>
+        {/* Background Ambient Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-              {isCreator && !isVictory && (
-                <button
-                  onClick={handleDeclareVictory}
-                  disabled={declaringVictory}
-                  className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg shadow-yellow-500/10 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <HiTrophy className="text-sm" />
-                  <span>{declaringVictory ? "En cours..." : "Déclarer Victoire 🏆"}</span>
-                </button>
-              )}
-            </div>
+        {/* Tags Bar */}
+        <div className="flex flex-wrap items-center gap-3 relative z-10">
+          <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+            isVictory
+              ? "bg-amber-500 text-neutral-950 shadow-lg shadow-amber-500/20"
+              : "bg-green-500 text-neutral-950 shadow-lg shadow-green-500/20"
+          }`}>
+            {isVictory ? "🏆 Victoire Remportée !" : "🔥 Mobilisation Active"}
+          </span>
 
-            <h1 className="font-extrabold text-3xl sm:text-4xl md:text-5xl text-white tracking-tight leading-tight font-display">
-              {petition.title}
-            </h1>
+          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-neutral-300">
+            🏷️ {petition.category}
+          </span>
 
-            <div className="rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-neutral-950/20 max-h-[450px]">
-              <img
-                src={petition.imageUrl || "/assets/images/libération.jpg"}
-                alt="Illustration de la pétition"
-                className="w-full h-full object-cover"
-              />
-            </div>
+          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-neutral-300">
+            🌍 Échelle : {petition.scale}
+          </span>
 
-            {/* Creator details */}
-            <div className="flex items-center space-x-3 bg-neutral-900/50 p-4 rounded-2xl border border-white/5 shadow-md">
-              <div className="h-10 w-10 rounded-full bg-green-950/30 flex items-center justify-center text-green-400 font-bold border border-green-500/20 shadow-inner">
-                <HiUser className="text-xl" />
-              </div>
-              <div>
-                <p className="font-bold text-sm text-white font-display">
-                  {petition.creatorName}
-                </p>
-                <p className="text-[10px] text-neutral-450 font-light mt-0.5">
-                  A lancé cette pétition le {petition.createdAt.toLocaleDateString("fr-FR")}
-                </p>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="flex flex-col space-y-4 glass-card p-6 sm:p-8 rounded-3xl border border-white/5">
-              <div className="flex items-center space-x-2">
-                <div className="h-5 w-1 bg-green-500 rounded-full" />
-                <h3 className="font-extrabold text-lg text-white font-display">
-                  Description de la pétition
-                </h3>
-              </div>
-              <p className="text-neutral-350 font-light text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                {petition.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Discussion & Timeline Tab Header */}
-          <div className="border-b border-white/5 flex space-x-8 text-sm font-semibold pt-4">
-            <button
-              onClick={() => setActiveLeftTab("discussion")}
-              className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs font-display ${
-                activeLeftTab === "discussion"
-                  ? "border-green-500 text-green-400 font-extrabold"
-                  : "border-transparent text-neutral-500 hover:text-neutral-350"
-              }`}
-            >
-              Discussion ({comments.length})
-            </button>
-            <button
-              onClick={() => setActiveLeftTab("timeline")}
-              className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs font-display ${
-                activeLeftTab === "timeline"
-                  ? "border-green-500 text-green-400 font-extrabold"
-                  : "border-transparent text-neutral-500 hover:text-neutral-350"
-              }`}
-            >
-              Fil de Négociation ({timelineEvents.length})
-            </button>
-            <button
-              onClick={() => setActiveLeftTab("signatures")}
-              className={`pb-4 border-b-2 transition-all duration-200 uppercase tracking-wider text-xs font-display ${
-                activeLeftTab === "signatures"
-                  ? "border-green-500 text-green-400 font-extrabold"
-                  : "border-transparent text-neutral-500 hover:text-neutral-350"
-              }`}
-            >
-              Signataires ({signatures.length})
-            </button>
-          </div>
-
-          {/* TAB 1: Discussion Thread */}
-          {activeLeftTab === "discussion" && (
-            <div className="flex flex-col space-y-6 animate-fadeIn">
-              {/* Comment Form */}
-              {user ? (
-                <form onSubmit={handleAddComment} className="glass-card p-4 rounded-2xl border border-white/5 space-y-3">
-                  {commentError && (
-                    <div className="p-3 rounded-xl border border-red-500/20 bg-red-950/20 text-red-400 text-xs">
-                      {commentError}
-                    </div>
-                  )}
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Partagez votre avis ou expliquez pourquoi vous soutenez cette cause..."
-                    rows={3}
-                    className="block w-full px-4 py-3 rounded-xl border border-white/5 bg-neutral-950/30 text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 text-sm resize-none transition-all"
-                    required
-                    disabled={commenting}
-                  />
-                  <div className="flex justify-end">
-                    <ButtonClick
-                      text={commenting ? "Publication..." : "Commenter"}
-                      classButton="rounded-full bg-green-500 hover:bg-green-600 px-5 py-2 text-neutral-950 text-xs font-bold"
-                      classArrow="hidden"
-                      type="submit"
-                      disabled={commenting || !commentText.trim()}
-                    />
-                  </div>
-                </form>
-              ) : (
-                <p className="text-xs text-neutral-500 italic pl-1">
-                  Vous devez être connecté pour participer à la discussion.
-                </p>
-              )}
-
-              {/* Comments List */}
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="glass-card p-5 rounded-2xl border border-white/5 flex items-start space-x-3.5 animate-fadeIn">
-                    <div className="h-8 w-8 rounded-full bg-neutral-900/60 flex items-center justify-center text-[10px] text-green-455 border border-white/5 font-bold uppercase flex-shrink-0">
-                      {comment.userName.charAt(0)}
-                    </div>
-                    <div className="flex-grow space-y-1.5 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-white truncate font-display">
-                          {comment.userName}
-                        </p>
-                        <p className="text-[10px] text-neutral-500">
-                          {comment.createdAt.toLocaleDateString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                      <p className="text-neutral-350 text-sm font-light leading-relaxed whitespace-pre-wrap">
-                        {comment.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-
-                {comments.length === 0 && (
-                  <div className="text-center py-10 glass-card rounded-2xl border border-white/5 text-neutral-500 text-xs italic">
-                    Aucun commentaire pour l&apos;instant. Soyez le premier à donner votre avis !
-                  </div>
-                )}
-              </div>
-            </div>
+          {petition.city && (
+            <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-400 flex items-center space-x-1">
+              <HiMapPin className="text-xs" />
+              <span>{petition.city}, {petition.country}</span>
+            </span>
           )}
-
-          {/* TAB 2: Negotiation Public Timeline */}
-          {activeLeftTab === "timeline" && (
-            <div className="flex flex-col space-y-8 animate-fadeIn">
-              
-              {/* Event Publication Form (Creator OR Verified Accounts Only) */}
-              {user && (isCreator || isVerifiedOfficial) && (
-                <form onSubmit={handleAddTimelineEvent} className="glass-card p-5 sm:p-6 rounded-2xl border border-white/10 space-y-4">
-                  <div className="flex items-center space-x-2 text-green-400 mb-1">
-                    <HiSparkles className="text-lg" />
-                    <h4 className="text-sm font-extrabold text-white font-display">
-                      {isVerifiedOfficial ? "Publier une réponse officielle" : "Publier un nouveau développement"}
-                    </h4>
-                  </div>
-
-                  {eventError && (
-                    <div className="p-3 rounded-xl border border-red-500/20 bg-red-950/20 text-red-400 text-xs">
-                      {eventError}
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <Input
-                      type="text"
-                      placeholder="Titre de la mise à jour (ex: Lancement des travaux, Déclaration du Maire...)"
-                      value={eventTitle}
-                      onChange={(e) => setEventTitle(e.target.value)}
-                      required
-                      disabled={eventPosting}
-                    />
-
-                    <textarea
-                      value={eventDesc}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEventDesc(e.target.value)}
-                      placeholder="Expliquez en détail les récents développements, accords, ou réponses apportées..."
-                      rows={3}
-                      className="block w-full px-4 py-3 rounded-xl border border-white/5 bg-neutral-950/30 text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 text-sm resize-none transition-all"
-                      required
-                      disabled={eventPosting}
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    {/* Event Type selector info */}
-                    <div className="text-[10px] text-neutral-450 font-bold uppercase tracking-wider">
-                      Publié en tant que :{" "}
-                      <span className={isVerifiedOfficial ? "text-blue-400" : "text-green-400"}>
-                        {isVerifiedOfficial ? `${user.officialTitle} (Officiel)` : "Créateur de la pétition"}
-                      </span>
-                    </div>
-
-                    <ButtonClick
-                      text={eventPosting ? "Publication..." : "Publier"}
-                      classButton="rounded-full bg-green-500 hover:bg-green-600 px-6 py-2 text-neutral-950 text-xs font-bold"
-                      classArrow="hidden"
-                      type="submit"
-                      disabled={eventPosting || !eventTitle.trim() || !eventDesc.trim()}
-                    />
-                  </div>
-                </form>
-              )}
-
-              {/* Vertical Timeline Tree */}
-              <div className="relative pl-6 space-y-8">
-                {/* Center Line */}
-                <div className="absolute left-[11px] top-2 bottom-2 w-[1px] bg-white/10" />
-
-                {timelineEvents.map((event) => {
-                  const isOfficial = event.isOfficialResponse;
-                  const isVictoryEvent = event.type === "victory";
-
-                  return (
-                    <div key={event.id} className="relative flex flex-col space-y-2 animate-fadeIn">
-                      
-                      {/* Timeline Node Point */}
-                      <div className={`absolute -left-[20px] top-1.5 h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center ${
-                        isVictoryEvent
-                          ? "bg-yellow-500 border-yellow-500 text-[10px] text-neutral-950 scale-110"
-                          : isOfficial
-                          ? "bg-[#0b0b0f] border-blue-500"
-                          : "bg-[#0b0b0f] border-green-500"
-                      }`}>
-                        {isVictoryEvent ? <HiTrophy className="text-[10px]" /> : <div className={`h-1.5 w-1.5 rounded-full ${isOfficial ? "bg-blue-500" : "bg-green-500"}`} />}
-                      </div>
-
-                      {/* Header info */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-neutral-500 pl-2">
-                        <div className="flex items-center space-x-2 font-semibold">
-                          <span className="text-neutral-400">{event.authorName}</span>
-                          {isOfficial && (
-                            <span className="flex items-center text-blue-400 space-x-0.5 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px]">
-                              <HiCheckBadge className="text-xs" />
-                              <span>{event.officialTitle || "Compte Officiel"}</span>
-                            </span>
-                          )}
-                        </div>
-                        <span className="font-light">
-                          Le {event.createdAt.toLocaleDateString("fr-FR", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-
-                      {/* Event Card */}
-                      <div className={`p-5 rounded-2xl border transition-all duration-300 ${
-                        isVictoryEvent
-                          ? "bg-yellow-500/5 border-yellow-500/20 hover:border-yellow-500/30"
-                          : isOfficial
-                          ? "bg-blue-500/5 border-blue-500/20 hover:border-blue-500/30"
-                          : "glass-card border-white/5 hover:border-white/10"
-                      }`}>
-                        <h4 className={`text-base font-extrabold font-display leading-tight mb-2 ${
-                          isVictoryEvent ? "text-yellow-400" : isOfficial ? "text-blue-400" : "text-white"
-                        }`}>
-                          {event.title}
-                        </h4>
-                        <p className="text-neutral-350 text-xs sm:text-sm font-light leading-relaxed whitespace-pre-wrap">
-                          {event.description}
-                        </p>
-                      </div>
-
-                    </div>
-                  );
-                })}
-
-                {timelineEvents.length === 0 && (
-                  <div className="text-center py-10 glass-card rounded-2xl border border-white/5 text-neutral-500 text-xs italic pl-0">
-                    Aucun développement publié pour le moment. Suivez le fil pour rester informé.
-                  </div>
-                )}
-              </div>
-
-            </div>
-          )}
-
-          {/* TAB 3: Signatures List */}
-          {activeLeftTab === "signatures" && (
-            <div className="flex flex-col space-y-6 animate-fadeIn">
-              <div className="space-y-4">
-                {signatures.map((sig) => (
-                  <div key={sig.id} className="glass-card p-5 rounded-2xl border border-white/5 flex items-start space-x-3.5 animate-fadeIn">
-                    <div className="h-8 w-8 rounded-full bg-neutral-900/60 flex items-center justify-center text-[10px] text-green-455 border border-white/5 font-bold uppercase flex-shrink-0">
-                      {sig.userName.charAt(0)}
-                    </div>
-                    <div className="flex-grow space-y-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <p className="text-xs font-bold text-white truncate font-display">
-                            {sig.userName}
-                          </p>
-                          {(sig.city || sig.country) && (
-                            <span className="px-2 py-0.5 bg-neutral-950 border border-white/5 text-[9px] text-neutral-450 rounded-full font-light">
-                              📍 {sig.city ? `${sig.city}, ` : ""}{sig.country}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[10px] text-neutral-500">
-                          {sig.signedAt.toLocaleDateString("fr-FR", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                      {sig.reason && (
-                        <p className="text-neutral-350 text-xs italic font-light leading-relaxed pl-1 pt-1 border-l-2 border-green-500/30 mt-1">
-                          &ldquo;{sig.reason}&rdquo;
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {signatures.length === 0 && (
-                  <div className="text-center py-10 glass-card rounded-2xl border border-white/5 text-neutral-500 text-xs italic">
-                    Aucun signataire pour le moment.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
         </div>
 
-        {/* Right Side: Signatures & Sidebar */}
-        <div className="w-full lg:w-1/3 flex flex-col glass-card p-6 sm:p-8 rounded-3xl shadow-2xl border border-white/5 space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-2xl font-extrabold text-white font-display">
-              Soutiens
-            </h3>
-            <p className="text-xs sm:text-sm text-neutral-450">
-              <span className="font-extrabold text-white text-base">{petition.signaturesCount}</span> personnes ont signé. Objectif : {signatureGoal} !
-            </p>
-          </div>
+        {/* Title */}
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white font-display tracking-tight leading-tight relative z-10">
+          {petition.title}
+        </h1>
 
-          {/* Progress bar */}
-          <div className="w-full rounded-full bg-neutral-950 border border-white/5 h-4 overflow-hidden shadow-inner p-[2px]">
-            <div
-              className="bg-gradient-to-r from-green-500 to-emerald-500 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-
-          {/* Sign Error Message */}
-          {signError && (
-            <div className="flex items-center space-x-2 bg-red-950/20 border border-red-500/20 text-red-400 py-3 px-4 rounded-2xl text-xs font-medium">
-              <HiExclamationCircle className="text-lg flex-shrink-0" />
-              <span>{signError}</span>
+        {/* Creator Profile Header Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 flex items-center justify-center font-bold text-white shadow-md">
+              {petition.creatorName ? petition.creatorName.charAt(0).toUpperCase() : "A"}
             </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pt-2">
-            {hasSigned ? (
-              <div className="flex items-center justify-center space-x-2 bg-green-950/20 border border-green-500/20 text-green-400 py-3 rounded-full text-sm font-bold shadow-md shadow-green-950/10">
-                <HiCheckCircle className="text-lg" />
-                <span>Vous avez soutenu cette cause</span>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="text-sm font-bold text-white">{petition.creatorName || "Auteur anonyme"}</span>
+                <HiCheckBadge className="text-green-400 text-base" />
               </div>
-            ) : (
-              <ButtonClick
-                text={signing ? "Signature..." : "Soutenir cette cause"}
-                classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 font-extrabold text-sm justify-center w-full py-3.5 shadow-lg shadow-green-950/20 transition-all"
-                classArrow="hidden"
-                onClick={() => setShowSignModal(true)}
-                disabled={signing || isVictory}
-              />
-            )}
-
-            <ButtonClick
-              text={copied ? "Lien copié !" : "Partager la pétition"}
-              classButton="rounded-full bg-neutral-900 hover:bg-neutral-800/80 border border-white/5 px-6 py-3 text-white font-semibold text-xs justify-center w-full transition-all"
-              classArrow="hidden"
-              onClick={handleShare}
-            />
+              <span className="text-xs text-neutral-400 font-light">Initiateur de la cause sur Apption</span>
+            </div>
           </div>
 
-          {/* Signers List */}
-          <div className="flex flex-col space-y-4 pt-5 border-t border-white/5">
-            <h4 className="text-[10px] font-bold uppercase text-neutral-450 tracking-wider">
-              Derniers signataires ({petition.signatureNames.length})
-            </h4>
-            <div className="flex flex-col space-y-2 max-h-48 overflow-y-auto scrollbar-hidden pr-1">
-              {petition.signatureNames.slice().reverse().map((name: string, index: number) => (
-                <div key={index} className="flex items-center space-x-2.5 py-2 border-b border-white/5 last:border-0">
-                  <div className="h-6 w-6 rounded-full bg-neutral-900/60 flex items-center justify-center text-[10px] text-green-400 border border-white/5 font-bold uppercase">
-                    {name.charAt(0)}
-                  </div>
-                  <p className="text-xs font-semibold text-neutral-300 truncate">
-                    {name}
-                  </p>
-                </div>
-              ))}
-              {petition.signatureNames.length === 0 && (
-                <p className="text-xs text-neutral-500 italic py-2">
-                  Aucun signataire pour le moment.
-                </p>
-              )}
-            </div>
+          <div className="flex items-center space-x-4 text-xs text-neutral-400 font-mono">
+            <span>👁️ {petition.views || 0} vues</span>
+            <span>📢 {petition.shares || 0} partages</span>
           </div>
         </div>
 
       </div>
 
-      {/* Signature Reason Modal */}
-      {showSignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0b0f]/80 backdrop-blur-sm p-4 animate-fadeIn">
-          <form
-            onSubmit={handleSign}
-            className="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-5"
-          >
-            <div className="flex items-center space-x-2 text-green-400">
-              <HiSparkles className="text-2xl animate-pulse" />
-              <h3 className="text-lg font-extrabold text-white font-display">Soutenir cette cause</h3>
-            </div>
+      {/* Main Grid: Left Content (2 cols) & Right Action Card (1 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        {/* Left Column: Image, Tabs & Content */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Main Hero Media Container */}
+          <div className="glass-card rounded-3xl overflow-hidden border border-white/10 h-[340px] sm:h-[420px] relative shadow-2xl">
+            <img
+              src={petition.imageUrl || "/assets/images/libération.jpg"}
+              alt={petition.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60" />
+          </div>
 
-            <div className="text-xs text-neutral-400 font-light leading-relaxed space-y-2">
-              <p>Vous vous apprêtez à signer la pétition : <span className="font-bold text-white">&ldquo;{petition.title}&rdquo;</span>.</p>
-              {user && (user.city || user.country) && (
-                <div className="flex items-center space-x-1 text-green-455 font-semibold">
-                  <span>📍 Position : {user.city ? `${user.city}, ` : ""}{user.country}</span>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="reason" className="block mb-2 text-xs font-semibold text-neutral-350 pl-1">
-                Pourquoi signez-vous ? (optionnel)
-              </label>
-              <textarea
-                id="reason"
-                rows={4}
-                placeholder="Ex: Je soutiens cette initiative car il est temps de faire bouger les choses..."
-                value={signReason}
-                onChange={(e) => setSignReason(e.target.value)}
-                disabled={signing}
-                className="block w-full px-4 py-3 rounded-2xl border border-white/5 bg-neutral-950/30 text-white placeholder-neutral-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/10 text-xs sm:text-sm resize-none transition-all"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
+          {/* Navigation Tabs Bar */}
+          <div className="flex items-center space-x-2 border-b border-white/10 pb-3 overflow-x-auto scrollbar-hidden">
+            {[
+              { id: "cause", label: "📖 La Cause", count: null },
+              { id: "timeline", label: "📢 Journal de Bord", count: timelineEvents.length },
+              { id: "discussion", label: "💬 Commentaires", count: comments.length },
+              { id: "signatures", label: "✍️ Signataires", count: signatures.length },
+            ].map((tab) => (
               <button
-                type="button"
-                onClick={() => {
-                  setShowSignModal(false);
-                  setSignReason("");
-                }}
-                className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
-                disabled={signing}
-              >
-                Annuler
-              </button>
-              <ButtonClick
-                text={signing ? "Validation..." : "Confirmer ma signature"}
-                classButton="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 text-xs font-extrabold shadow-md"
-                classArrow="hidden"
-                type="submit"
-                disabled={signing}
-              />
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0b0f]/80 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6 relative z-50">
-            
-            {/* Header */}
-            <div className="flex items-center space-x-2 text-green-400">
-              <HiShare className="text-2xl" />
-              <h3 className="text-lg font-extrabold text-white font-display">
-                {t("petitions.share_modal_title")}
-              </h3>
-            </div>
-
-            {/* Instruction */}
-            <p className="text-xs text-neutral-400 font-light leading-relaxed">
-              {t("petitions.share_modal_subtitle")}
-            </p>
-
-            {/* Copyable Input and Button */}
-            <div className="flex items-center space-x-2 bg-neutral-950/40 p-2.5 rounded-2xl border border-white/5">
-              <input
-                type="text"
-                readOnly
-                value={typeof window !== "undefined" ? window.location.href : ""}
-                className="bg-transparent border-0 focus:outline-none focus:ring-0 text-xs text-neutral-300 w-full px-2 select-all font-light"
-              />
-              <button
-                onClick={handleCopyLink}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  copied
-                    ? "bg-green-500/20 text-green-400 border border-green-500/20"
-                    : "bg-green-500 text-neutral-950 hover:bg-green-600 border border-transparent shadow-md"
+                key={tab.id}
+                onClick={() => setActiveLeftTab(tab.id as any)}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
+                  activeLeftTab === tab.id
+                    ? "bg-green-500 text-neutral-950 shadow-lg shadow-green-500/20"
+                    : "text-neutral-400 hover:text-white hover:bg-white/5"
                 }`}
               >
-                {copied ? t("petitions.share_copied") : t("petitions.share_copy")}
+                {tab.label} {tab.count !== null && `(${tab.count})`}
               </button>
+            ))}
+          </div>
+
+          {/* TAB 1: LA CAUSE */}
+          {activeLeftTab === "cause" && (
+            <div className="glass-card p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6 animate-fadeIn">
+              <h3 className="text-lg font-extrabold text-white font-display flex items-center space-x-2">
+                <span>Description & Objectifs</span>
+              </h3>
+              <div className="text-sm text-neutral-300 font-light leading-relaxed whitespace-pre-wrap">
+                {petition.description}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: JOURNAL DE BORD (TIMELINE) */}
+          {activeLeftTab === "timeline" && (
+            <div className="space-y-6 animate-fadeIn">
+              {isOwner && (
+                <form onSubmit={handleAddTimelineEvent} className="glass-card p-6 rounded-3xl border border-green-500/20 space-y-4">
+                  <h4 className="text-sm font-bold text-white">Publier une actualité pour vos signataires</h4>
+                  <input
+                    type="text"
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                    placeholder="Titre de la mise à jour..."
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
+                  />
+                  <textarea
+                    value={eventDesc}
+                    onChange={(e) => setEventDesc(e.target.value)}
+                    rows={3}
+                    placeholder="Contenu du communiqué..."
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={eventPosting}
+                    className="px-5 py-2.5 rounded-xl bg-green-500 text-neutral-950 font-extrabold text-xs hover:bg-green-400 cursor-pointer"
+                  >
+                    {eventPosting ? "Publication..." : "Publier l'actualité"}
+                  </button>
+                </form>
+              )}
+
+              {timelineEvents.length === 0 ? (
+                <div className="glass-card p-8 rounded-3xl text-center text-neutral-500 text-xs">
+                  Aucune actualité publiée pour le moment.
+                </div>
+              ) : (
+                timelineEvents.map((evt) => (
+                  <div key={evt.id} className="glass-card p-6 rounded-3xl border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-neutral-400">
+                      <span className="font-bold text-green-400">📢 Mise à jour officielle</span>
+                      <span className="font-mono">{new Date(evt.createdAt).toLocaleDateString("fr-FR")}</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white">{evt.title}</h4>
+                    <p className="text-xs text-neutral-300 font-light leading-relaxed whitespace-pre-wrap">{evt.description}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: DISCUSSION & COMMENTAIRES */}
+          {activeLeftTab === "discussion" && (
+            <div className="space-y-6 animate-fadeIn">
+              <form onSubmit={handleAddComment} className="glass-card p-6 rounded-3xl border border-white/5 space-y-4">
+                <h4 className="text-sm font-bold text-white">Participer au débat citoyen</h4>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  rows={3}
+                  placeholder="Pourquoi cette cause vous touche-t-elle ?"
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl p-3.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
+                />
+                <button
+                  type="submit"
+                  disabled={commenting || !commentText.trim()}
+                  className="px-5 py-2.5 rounded-xl bg-green-500 text-neutral-950 font-extrabold text-xs hover:bg-green-400 disabled:opacity-40 cursor-pointer"
+                >
+                  {commenting ? "Vérification IA..." : "Publier mon commentaire"}
+                </button>
+              </form>
+
+              {comments.length === 0 ? (
+                <div className="glass-card p-8 rounded-3xl text-center text-neutral-500 text-xs">
+                  Soyez le premier à commenter cette pétition !
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white">{comment.userName}</span>
+                      <span className="text-[10px] text-neutral-500 font-mono">{new Date(comment.createdAt).toLocaleDateString("fr-FR")}</span>
+                    </div>
+                    <p className="text-xs text-neutral-300 font-light leading-relaxed">{comment.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: SIGNATAIRES */}
+          {activeLeftTab === "signatures" && (
+            <div className="glass-card p-6 rounded-3xl border border-white/5 space-y-4 animate-fadeIn">
+              <h4 className="text-sm font-bold text-white">Derniers signataires engager ({signatures.length})</h4>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hidden">
+                {signatures.map((sig) => (
+                  <div key={sig.id} className="bg-neutral-950/60 p-3.5 rounded-2xl border border-white/5 flex items-center justify-between text-xs">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-white">{sig.userName}</span>
+                      {sig.reason && <p className="text-[11px] text-neutral-400 italic">« {sig.reason} »</p>}
+                    </div>
+                    <span className="text-[10px] text-neutral-500 font-mono">{new Date(sig.signedAt).toLocaleDateString("fr-FR")}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Right Column: Sticky Action Mobilization Sidebar */}
+        <div className="lg:col-span-1 space-y-6 sticky top-24">
+          
+          {/* Progress & Signature Gauge Card */}
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6 relative overflow-hidden">
+            
+            {/* Signature Counter Header */}
+            <div className="space-y-2 text-center">
+              <div className="text-4xl font-extrabold text-white font-display">
+                {petition.signaturesCount || 1}
+              </div>
+              <p className="text-xs text-neutral-400 font-medium">
+                signatures récoltées sur l&apos;objectif de <strong className="text-white">{nextGoal}</strong>
+              </p>
+
+              {/* Progress Bar */}
+              <div className="w-full h-3 bg-neutral-950 rounded-full overflow-hidden border border-white/10 p-0.5 mt-2">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    isVictory
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                      : "bg-gradient-to-r from-green-500 to-emerald-400"
+                  }`}
+                  style={{ width: `${Math.max(5, progressPercent)}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-mono text-green-400 font-bold block">{progressPercent}% de l&apos;objectif atteint</span>
             </div>
 
-            {/* Social Icons Grid */}
-            <div className="grid grid-cols-4 gap-3 pt-2">
-              {/* Twitter */}
-              <a
-                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                  typeof window !== "undefined" ? window.location.href : ""
-                )}&text=${encodeURIComponent(petition.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleSocialClick}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-400/30 hover:bg-blue-400/5 hover:text-blue-400 text-neutral-350 transition-all cursor-pointer group"
-              >
-                <FaTwitter className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Twitter</span>
-              </a>
-
-              {/* Facebook */}
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  typeof window !== "undefined" ? window.location.href : ""
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleSocialClick}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-600/30 hover:bg-blue-600/5 hover:text-blue-500 text-neutral-350 transition-all cursor-pointer group"
-              >
-                <FaFacebook className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Facebook</span>
-              </a>
-
-              {/* WhatsApp */}
-              <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  petition.title + " - " + (typeof window !== "undefined" ? window.location.href : "")
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleSocialClick}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-green-500/30 hover:bg-green-500/5 hover:text-green-400 text-neutral-350 transition-all cursor-pointer group"
-              >
-                <FaWhatsapp className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">WhatsApp</span>
-              </a>
-
-              {/* Email */}
-              <a
-                href={`mailto:?subject=${encodeURIComponent(petition.title)}&body=${encodeURIComponent(
-                  (locale === "fr" ? "Découvrez cette pétition sur Apption : " : "Check out this petition on Apption: ") +
-                    (typeof window !== "undefined" ? window.location.href : "")
-                )}`}
-                onClick={handleSocialClick}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-red-500/30 hover:bg-red-500/5 hover:text-red-400 text-neutral-350 transition-all cursor-pointer group"
-              >
-                <HiEnvelope className="text-xl mb-1.5 group-hover:scale-105 transition-transform" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Email</span>
-              </a>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="flex justify-end pt-3">
+            {/* Signature Button */}
+            {hasSigned ? (
+              <div className="w-full py-3.5 px-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-extrabold text-center flex items-center justify-center space-x-2">
+                <HiCheckCircle className="text-lg" />
+                <span>Vous avez signé cette pétition !</span>
+              </div>
+            ) : (
               <button
-                type="button"
-                onClick={() => setShowShareModal(false)}
-                className="px-5 py-2.5 rounded-full border border-white/5 text-xs font-bold text-neutral-350 hover:text-white transition-colors cursor-pointer"
+                onClick={() => {
+                  if (!user) {
+                    router.push("/login");
+                  } else {
+                    setShowSignModal(true);
+                  }
+                }}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
-                {t("petitions.share_close")}
+                ✍️ Signer cette pétition
               </button>
+            )}
+
+            {/* Owner Action: Declare Victory */}
+            {isOwner && !isVictory && (
+              <button
+                onClick={handleDeclareVictory}
+                disabled={declaringVictory}
+                className="w-full py-3 px-4 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <HiTrophy className="text-base" />
+                <span>{declaringVictory ? "Déclaration..." : "🏆 Déclarer la Victoire !"}</span>
+              </button>
+            )}
+
+            {/* Share & Viral Growth Kit */}
+            <div className="pt-4 border-t border-white/5 space-y-3">
+              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">Partager la cause</span>
+              
+              {/* Copyable Link Bar */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== "undefined" ? window.location.href : ""}
+                  className="flex-1 bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-neutral-400 font-mono focus:outline-none"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  {copied ? "Copié !" : "Copier"}
+                </button>
+              </div>
+
+              {/* Social Quick Share Buttons */}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <button
+                  onClick={() => handleSocialShare("twitter")}
+                  className="flex-1 py-2 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/5 text-neutral-300 hover:text-cyan-400 flex items-center justify-center transition-all cursor-pointer"
+                  title="Partager sur X / Twitter"
+                >
+                  <FaTwitter className="text-sm" />
+                </button>
+                <button
+                  onClick={() => handleSocialShare("facebook")}
+                  className="flex-1 py-2 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/5 text-neutral-300 hover:text-blue-400 flex items-center justify-center transition-all cursor-pointer"
+                  title="Partager sur Facebook"
+                >
+                  <FaFacebook className="text-sm" />
+                </button>
+                <button
+                  onClick={() => handleSocialShare("whatsapp")}
+                  className="flex-1 py-2 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/5 text-neutral-300 hover:text-green-400 flex items-center justify-center transition-all cursor-pointer"
+                  title="Partager sur WhatsApp"
+                >
+                  <FaWhatsapp className="text-sm" />
+                </button>
+                <button
+                  onClick={() => handleSocialShare("email")}
+                  className="flex-1 py-2 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/5 text-neutral-300 hover:text-amber-400 flex items-center justify-center transition-all cursor-pointer"
+                  title="Envoyer par Email"
+                >
+                  <HiEnvelope className="text-sm" />
+                </button>
+              </div>
             </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Signature Modal */}
+      {showSignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl max-w-md w-full border border-white/10 space-y-6">
+            <h3 className="text-lg font-extrabold text-white">Signer la pétition</h3>
+            <form onSubmit={handleSignConfirm} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-neutral-400 block mb-1">
+                  Pourquoi signez-vous ? (Optionnel)
+                </label>
+                <textarea
+                  value={signReason}
+                  onChange={(e) => setSignReason(e.target.value)}
+                  rows={3}
+                  placeholder="Partagez le motif de votre engagement..."
+                  className="w-full bg-neutral-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
+                />
+              </div>
+
+              {signError && <p className="text-xs text-red-400">{signError}</p>}
+
+              <div className="flex items-center space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSignModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-white/10 text-neutral-400 text-xs font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={signing}
+                  className="flex-1 py-2.5 rounded-xl bg-green-500 text-neutral-950 text-xs font-extrabold"
+                >
+                  {signing ? "Signature..." : "Confirmer ma signature"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }
