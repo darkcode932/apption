@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { HiTrophy, HiFire, HiMapPin, HiCheckBadge, HiArrowRight, HiTag } from "react-icons/hi2";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { petitionRepository } from "../../infrastructure/ServiceLocator";
 
 interface PetItemProps {
   id?: string;
@@ -48,9 +49,16 @@ export default function PetItem({
   const nextGoal = Math.max(100, Math.ceil(signaturesCount / 100) * 100);
   const progressPercent = Math.min(100, Math.round((signaturesCount / nextGoal) * 100));
 
+  const handleMouseEnter = () => {
+    if (id) {
+      petitionRepository.getPetitionById(id).catch(() => {});
+    }
+  };
+
   return (
     <Link
       href={href}
+      onMouseEnter={handleMouseEnter}
       className="group relative flex flex-col bg-neutral-900 p-4 sm:p-5 rounded-3xl w-full max-w-[340px] border border-white/10 hover:border-green-500/40 shadow-xl hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden"
     >
       {/* Top Image Container */}

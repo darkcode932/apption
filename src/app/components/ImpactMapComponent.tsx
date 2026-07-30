@@ -68,19 +68,29 @@ export default function ImpactMapComponent({
     };
   }, []);
 
+  // Memoize filtered petitions to avoid redundant calculations
+  const filteredPetitionsMemo = React.useMemo(() => {
+    return petitions.filter((p) => {
+      if (selectedStatus === "victory" && p.status !== "victory") return false;
+      if (selectedStatus === "active" && p.status === "victory") return false;
+      return true;
+    });
+  }, [petitions, selectedStatus]);
+
   // Update Markers on petition / filter change
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
 
     import("leaflet").then((leafletModule) => {
       const L = leafletModule.default || leafletModule;
-      renderMarkers(L, mapInstanceRef.current, markersLayerRef.current);
+      renderMarkers(L, mapInstanceRef.current, markersLayerRef.current, filteredPetitionsMemo);
     });
-  }, [petitions, userLocation, selectedStatus]);
+  }, [filteredPetitionsMemo, userLocation, selectedStatus]);
 
   const renderMarkers = React.useCallback(
-    (L: any, map: any, markersGroup: any) => {
+    (L: any, map: any, markersGroup: any, petitionList?: any[]) => {
       markersGroup.clearLayers();
+      const targetPetitions = petitionList || filteredPetitionsMemo;
 
       // 1. Add User Location Marker
       if (userLocation) {
@@ -103,13 +113,8 @@ export default function ImpactMapComponent({
           .bindTooltip("📍 Votre Position", { permanent: false, direction: "top" });
       }
 
-      // 2. Filter Petitions
-      const filtered = petitions.filter((p) => {
-        if (!p.latitude || !p.longitude) return false;
-        if (selectedStatus === "victory") return p.status === "victory";
-        if (selectedStatus === "active") return p.status !== "victory";
-        return true;
-      });
+      // 2. Filter Petitions for valid coordinates
+      const filtered = targetPetitions.filter((p) => p.latitude && p.longitude);
 
       // 3. Add Petition Markers
       filtered.forEach((pet) => {

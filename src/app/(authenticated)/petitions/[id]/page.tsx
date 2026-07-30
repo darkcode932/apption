@@ -160,6 +160,20 @@ export default function PetitionDetailsPage() {
     setSignError(null);
 
     try {
+      // Optimistic UI Update for 0ms perceived latency
+      setPetition((prev) =>
+        prev
+          ? {
+              ...prev,
+              signaturesCount: (prev.signaturesCount || 0) + 1,
+              signatureUserIds: [...(prev.signatureUserIds || []), user.id],
+            }
+          : null
+      );
+      setShowSignModal(false);
+      setSignReason("");
+      setShowCelebrationModal(true);
+
       await signPetitionUseCase.execute(
         petition.id,
         user.id,
@@ -168,9 +182,6 @@ export default function PetitionDetailsPage() {
         user.city,
         user.country
       );
-      setShowSignModal(false);
-      setSignReason("");
-      setShowCelebrationModal(true);
     } catch (err: any) {
       setSignError(err.message || "Erreur lors de la signature.");
     } finally {

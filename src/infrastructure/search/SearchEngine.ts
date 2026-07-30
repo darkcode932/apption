@@ -45,6 +45,14 @@ export class SearchEngine {
     "Autres...",
   ];
 
+  // In-memory query cache for 0ms Spotlight search
+  private static searchCache = new Map<string, { data: SearchResults; timestamp: number }>();
+  private static CACHE_TTL_MS = 10000; // 10s TTL
+
+  public static invalidateCache() {
+    this.searchCache.clear();
+  }
+
   public static async search(term: string): Promise<SearchResults> {
     const cleanTerm = term.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -52,7 +60,13 @@ export class SearchEngine {
       return { petitions: [], comments: [], categories: [] };
     }
 
-    // Fetch all cached petitions
+    const now = Date.now();
+    const cached = this.searchCache.get(cleanTerm);
+    if (cached && now - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    // Fetch cached petitions
     const allPetitions = await petitionRepository.getAllPetitions();
 
     // 1. Search Petitions
@@ -92,13 +106,13 @@ export class SearchEngine {
       }
     });
 
-    // Limit petitions to top 6
-    const petitionsResult = matchingPetitions.slice(0, 6);
-
-    return {
-      petitions: petitionsResult,
-      comments: [], // Comments are queried per petition when selected
+    const results: SearchResults = {
+      petitions: matchingPetitions.slice(0, 6),
+      comments: [],
       categories: matchingCategories,
     };
+
+    this.searchCache.set(cleanTerm, { data: results, timestamp: now });
+    return results;
   }
 }
