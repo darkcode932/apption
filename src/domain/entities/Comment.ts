@@ -4,4 +4,5 @@ export interface Comment {
   userName: string;
   text: string;
   createdAt: Date;
+  upvotes?: number;
 }
