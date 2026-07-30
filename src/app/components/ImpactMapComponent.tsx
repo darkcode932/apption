@@ -26,6 +26,13 @@ export default function ImpactMapComponent({
 
     let L: any;
     import("leaflet").then((leafletModule) => {
+      if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+      // Safely clear previous Leaflet container ID if present to prevent re-initialization error
+      if ((mapContainerRef.current as any)._leaflet_id) {
+        (mapContainerRef.current as any)._leaflet_id = null;
+      }
+
       L = leafletModule.default || leafletModule;
 
       const initialLat = userLocation?.latitude || 4.05; // Default Douala / Paris center
