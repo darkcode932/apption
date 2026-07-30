@@ -73,7 +73,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+    return {
+      locale: "fr" as Locale,
+      setLocale: () => {},
+      t: (key: string) => getNestedValue(dictionaries.fr, key),
+    };
   }
   return context;
 }
