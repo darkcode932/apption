@@ -110,134 +110,130 @@ export class PetBotAgentEngine {
     switch (intent) {
       case "DRAFT_PETITION":
         return isEn
-          ? `🤖 **PetBot AI Complete Campaign Draft**
+          ? `PetBot AI — Complete Campaign Draft
 
-Here is a tailor-made, high-impact petition proposal for **${topicStr}**${locStr}:
+Here is a tailor-made, high-impact petition proposal for "${topicStr}"${locStr}:
 
----
+📢 Title Proposal:
+"Urgent Action Needed: Stand Up for ${topicStr.toUpperCase()}${locStr.toUpperCase()}!"
 
-### 📢 Title Proposal:
-> **"Urgent Action Needed: Stand Up for ${topicStr.toUpperCase()}${locStr.toUpperCase()}!"**
+🎯 Targeted Decision-Maker:
+${targetStr || "Local Authorities & Competent Decision-Makers"}
 
-### 🎯 Targeted Decision-Maker:
-${targetStr || "*Local Authorities & Competent Decision-Makers*"}
+📝 Core Petition Text:
 
-### 📝 Core Petition Text:
-**The Situation:**
+The Situation:
 ${topicStr} is currently facing critical challenges${locStr}. Citizens and local communities deserve immediate attention and concrete policy changes. Every day without action accentuates the problem.
 
-**Why This Matters:**
+Why This Matters:
 Public mobilization is essential. We are gathering signatures to demand transparent, actionable commitments and an immediate response from decision-makers.
 
-**Our Demands:**
-1. **Immediate Intervention**: Stop harmful practices and initiate immediate remediation.
-2. **Accountability**: Enforce strict monitoring and public reporting on progress.
-3. **Community Support**: Allocate dedicated resources to solve the issue long-term.
+Our Demands:
+1. Immediate Intervention: Stop harmful practices and initiate immediate remediation.
+2. Accountability: Enforce strict monitoring and public reporting on progress.
+3. Community Support: Allocate dedicated resources to solve the issue long-term.
 
----
+💡 Pro Tip: You can copy this draft directly into the "Launch a Petition" form on Apption and use our AI Copilot to generate matching social media share kits!`
+          : `PetBot IA — Proposition de Rédaction Complète
 
-💡 *Pro Tip*: You can copy this draft directly into the **"Launch a Petition"** form on Apption and use our AI Copilot to generate matching social media share kits!`
-          : `🤖 **Proposition de Rédaction Complète par PetBot IA**
+Voici une proposition de pétition percutante rédigée sur mesure pour "${topicStr}"${locStr} :
 
-Voici une proposition de pétition percutante rédigée sur mesure pour **${topicStr}**${locStr} :
+📢 Proposition de Titre :
+« Urgence Citoyenne : Mobilisons-nous pour ${topicStr.toUpperCase()}${locStr.toUpperCase()} ! »
 
----
+🎯 Décideur Cible :
+${targetStr || "Autorités Compétentes & Décideurs Politiques/Locaux"}
 
-### 📢 Proposition de Titre :
-> **« Urgence Citoyenne : Mobilisons-nous pour ${topicStr.toUpperCase()}${locStr.toUpperCase()} ! »**
+📝 Texte de la Pétition :
 
-### 🎯 Décideur Cible :
-${targetStr || "*Autorités Compétentes & Décideurs Politiques/Locaux*"}
-
-### 📝 Texte de la Pétition :
-**Le Constat :**
+Le Constat :
 La situation concernant ${topicStr} exige aujourd'hui une prise de conscience collective et une réponse ferme${locStr}. Chaque jour de retard aggrave l'impact pour les citoyens et les générations futures.
 
-**Pourquoi c'est Inacceptable :**
+Pourquoi c'est Inacceptable :
 L'action publique ne peut plus être différée. En réunissant nos voix sur Apption, nous exigeons des engagements fermes, mesurables et immédiats de la part des responsables.
 
-**Nos Exigences Clés :**
-1. **Intervention Immédiate** : Mettre fin sans délai aux pratiques problématiques et engager un plan d'urgence.
-2. **Transparence & Suivi** : Publier des rapports d'avancement réguliers accessibles à tous les citoyens.
-3. **Moyens Dédiés** : Allouer un budget et des ressources concrètes pour garantir des solutions durables.
+Nos Exigences Clés :
+1. Intervention Immédiate : Mettre fin sans délai aux pratiques problématiques et engager un plan d'urgence.
+2. Transparence & Suivi : Publier des rapports d'avancement réguliers accessibles à tous les citoyens.
+3. Moyens Dédiés : Allouer un budget et des ressources concrètes pour garantir des solutions durables.
 
----
-
-💡 *Astuce* : Vous pouvez copier ce texte directement dans le formulaire **« Lancer une pétition »** sur Apption et utiliser notre Copilote IA pour créer vos visuels de partage !`;
+💡 Astuce : Vous pouvez copier ce texte directement dans le formulaire « Lancer une pétition » sur Apption et utiliser notre Copilote IA pour créer vos visuels de partage !`;
 
       case "BRAINSTORM_TITLES":
         return isEn
-          ? `💡 **PetBot AI Title & Slogan Brainstorming**
+          ? `PetBot IA — Title & Slogan Brainstorming 💡
 
-Here are 4 impactful title concepts for **${topicStr}**${locStr}:
+Here are 4 impactful title concepts for "${topicStr}"${locStr}:
 
-1. 🔥 **Urgent & Action-Oriented**: *"Act Now: ${topicStr}${locStr} Can't Wait Any Longer!"*
-2. 🏆 **Solution Focused**: *"For a Cleaner & Safer Future: Transform ${topicStr}${locStr}"*
-3. 🎯 **Direct Target Call-out**: *"${targetStr ? targetStr.toUpperCase() : "Decision Makers"}: Listen to Citizens on ${topicStr}"*
-4. ⚡ **Short & Punchy**: *"Save ${topicStr}${locStr} Today!"*
+1. 🔥 Urgent & Action-Oriented: "Act Now: ${topicStr}${locStr} Can't Wait Any Longer!"
+2. 🏆 Solution Focused: "For a Cleaner & Safer Future: Transform ${topicStr}${locStr}"
+3. 🎯 Direct Target Call-out: "${targetStr ? targetStr.toUpperCase() : "Decision Makers"}: Listen to Citizens on ${topicStr}"
+4. ⚡ Short & Punchy: "Save ${topicStr}${locStr} Today!"
 
 Which title best fits your campaign's voice?`
-          : `💡 **Brainstorming de Titres & Slogans par PetBot IA**
+          : `PetBot IA — Brainstorming de Titres & Slogans 💡
 
-Voici 4 idées de titres ultra-percutants pour **${topicStr}**${locStr} :
+Voici 4 idées de titres ultra-percutants pour "${topicStr}"${locStr} :
 
-1. 🔥 **Urgent & Mobilisateur** : *« Alerte Citoyenne : ${topicStr}${locStr} ne peut plus attendre ! »*
-2. 🏆 **Orienté Solution** : *« Pour un Avenir Durable : Transformons ${topicStr}${locStr} »*
-3. 🎯 **Interpellation Directe** : *« ${targetStr ? targetStr.toUpperCase() : "Décideurs"} : Écoutez les Citoyens pour ${topicStr} »*
-4. ⚡ **Court & Choc** : *« Sauvons ${topicStr}${locStr} Maintenant ! »*
+1. 🔥 Urgent & Mobilisateur : « Alerte Citoyenne : ${topicStr}${locStr} ne peut plus attendre ! »
+2. 🏆 Orienté Solution : « Pour un Avenir Durable : Transformons ${topicStr}${locStr} »
+3. 🎯 Interpellation Directe : « ${targetStr ? targetStr.toUpperCase() : "Décideurs"} : Écoutez les Citoyens pour ${topicStr} »
+4. ⚡ Court & Choc : « Sauvons ${topicStr}${locStr} Maintenant ! »
 
 Lequel de ces titres correspond le mieux à l'esprit de votre combat ?`;
 
       case "GROWTH_STRATEGY":
         return isEn
-          ? `🚀 **PetBot AI Signature Growth & PR Strategy**
+          ? `PetBot IA — Signature Growth & PR Strategy 🚀
 
-To reach your signature milestones for **${topicStr}**, follow this high-yield viral action plan:
+To reach your signature milestones for "${topicStr}", follow this high-yield viral action plan:
 
-1. 📱 **The 48-Hour Circle Launch**: Send direct WhatsApp messages and emails to your immediate network of 20 friends & family to get your first 50 signatures.
-2. 🌐 **Social Media Blitz**: Share your petition link on Twitter, Facebook groups, and LinkedIn. (Use our Share Modal on your petition page!).
-3. 📰 **Local Press Outreach**: Write a short press release to local newspapers and blogs mentioning your Apption petition link.
-4. 🗺️ **Interactive Impact Map**: Make sure your city is set so your petition appears on our **Interactive Impact Map (` + "`" + `/map` + "`" + `)**!`
-          : `🚀 **Stratégie de Croissance & Partage par PetBot IA**
+1. 📱 The 48-Hour Circle Launch: Send direct WhatsApp messages and emails to your immediate network of 20 friends & family to get your first 50 signatures.
+2. 🌐 Social Media Blitz: Share your petition link on Twitter, Facebook groups, and LinkedIn. (Use our Share Modal on your petition page!).
+3. 📰 Local Press Outreach: Write a short press release to local newspapers and blogs mentioning your Apption petition link.
+4. 🗺️ Interactive Impact Map: Make sure your city is set so your petition appears on our Interactive Impact Map (/map)!`
+          : `PetBot IA — Stratégie de Croissance & Partage 🚀
 
-Pour faire décoller le nombre de signatures pour **${topicStr}**, voici le plan d'action viral recommandé par l'IA :
+Pour faire décoller le nombre de signatures pour "${topicStr}", voici le plan d'action viral recommandé par l'IA :
 
-1. 📱 **Le Cercle des 48h** : Envoyez un message WhatsApp et e-mail personnalisé à vos 20 proches pour obtenir vos 50 premières signatures indispensables.
-2. 🌐 **Blitz Réseaux Sociaux** : Diffusez le lien direct via le bouton *Partager* sur vos groupes Facebook, Twitter et Instagram.
-3. 📰 **Alerte Médias & Élus** : Contactez les médias locaux ou mentionnez les élus sur les réseaux sociaux en joignant le lien de votre pétition Apption.
-4. 🗺️ **Carte d'Impact** : Assurez-vous d'avoir indiqué votre ville pour que votre pétition brille sur notre **Carte d'Impact (` + "`" + `/map` + "`" + `)** !`;
+1. 📱 Le Cercle des 48h : Envoyez un message WhatsApp et e-mail personnalisé à vos 20 proches pour obtenir vos 50 premières signatures indispensables.
+2. 🌐 Blitz Réseaux Sociaux : Diffusez le lien direct via le bouton Partager sur vos groupes Facebook, Twitter et Instagram.
+3. 📰 Alerte Médias & Élus : Contactez les médias locaux ou mentionnez les élus sur les réseaux sociaux en joignant le lien de votre pétition Apption.
+4. 🗺️ Carte d'Impact : Assurez-vous d'avoir indiqué votre ville pour que votre pétition brille sur notre Carte d'Impact (/map) !`;
 
       case "RAG_PLATFORM_STATS":
         return isEn
-          ? `📊 **Apption Live Platform Intelligence & Data**
+          ? `Apption — Live Platform Intelligence & Data 📊
 
 Here are the current real-time stats from the Apption platform:
-- 🏆 **Citizen Victories Won**: **${stats.victoriesCount}** victorious petitions highlighted on our map!
-- 🔥 **Active Mobilizations**: **${stats.activeCount}** ongoing citizen petitions collecting signatures.
-${stats.topPetitionTitle ? `- ⭐ **Top Trending Campaign**: *" ${stats.topPetitionTitle} "* with **${stats.topPetitionSignatures}** signatures!` : ""}
 
-You can view all these victories visually on the **Interactive Impact Map (` + "`" + `/map` + "`" + `)**!`
-          : `📊 **Données & Statistiques en Direct d'Apption**
+🏆 Citizen Victories Won: ${stats.victoriesCount} victorious petitions highlighted on our map!
+🔥 Active Mobilizations: ${stats.activeCount} ongoing citizen petitions collecting signatures.
+${stats.topPetitionTitle ? `⭐ Top Trending Campaign: "${stats.topPetitionTitle}" with ${stats.topPetitionSignatures} signatures!` : ""}
+
+You can view all these victories visually on the Interactive Impact Map (/map)!`
+          : `Apption — Données & Statistiques en Direct 📊
 
 Voici un aperçu en temps réel de l'impact de la communauté Apption :
-- 🏆 **Victoires Citoyennes Remportées** : **${stats.victoriesCount}** pétitions victorieuses célébrées sur notre carte !
-- 🔥 **Mobilisations Actives** : **${stats.activeCount}** pétitions en cours de collecte de signatures.
-${stats.topPetitionTitle ? `- ⭐ **Campagne la Plus Populaire** : *« ${stats.topPetitionTitle} »* avec **${stats.topPetitionSignatures}** signatures !` : ""}
 
-Découvrez toutes ces mobilisations géolocalisées sur la **Carte d'Impact (` + "`" + `/map` + "`" + `)** !`;
+🏆 Victoires Citoyennes Remportées : ${stats.victoriesCount} pétitions victorieuses célébrées sur notre carte !
+🔥 Mobilisations Actives : ${stats.activeCount} pétitions en cours de collecte de signatures.
+${stats.topPetitionTitle ? `⭐ Campagne la Plus Populaire : « ${stats.topPetitionTitle} » avec ${stats.topPetitionSignatures} signatures !` : ""}
+
+Découvrez toutes ces mobilisations géolocalisées sur la Carte d'Impact (/map) !`;
 
       case "WHO_AM_I":
         return isEn
-          ? `🐾 **I am PetBot AI**, the official intelligent agent of Apption!
+          ? `🐾 Je suis PetBot IA, l'agent intelligent officiel d'Apption !
 
-I combine artificial intelligence, citizen campaign expertise, and real-time Apption database insights to help you:
-- Draft full petitions with compelling arguments
-- Target the right political & corporate decision-makers
-- Build viral social media growth strategies
-- Track citizen victories on our Interactive Map
+J'associe l'intelligence artificielle, l'expertise en mobilisations citoyennes et l'analyse en temps réel des données d'Apption pour vous aider à :
+- Rédiger des pétitions complètes avec des arguments chocs
+- Cibler les bons décideurs politiques ou d'entreprises
+- Développer des stratégies de partage viral sur les réseaux sociaux
+- Suivre les victoires citoyennes sur notre Carte d'Impact
 
 What campaign are we launching together today?`
-          : `🐾 **Je suis PetBot IA**, l'agent intelligent officiel d'Apption !
+          : `🐾 Je suis PetBot IA, l'agent intelligent officiel d'Apption !
 
 J'associe l'intelligence artificielle, l'expertise en mobilisations citoyennes et l'analyse en temps réel des données d'Apption pour vous aider à :
 - Rédiger des pétitions complètes avec des arguments chocs
@@ -249,32 +245,32 @@ Quelle cause souhaitez-vous défendre aujourd'hui ?`;
 
       case "GREETING":
         return isEn
-          ? `Bonjour & Hello! 🐾 I am **PetBot AI**, your intelligent campaign agent.
+          ? `Bonjour & Hello ! 🐾 Je suis PetBot IA, votre agent intelligent de campagne.
 
-How can I help you transform your idea into a successful citizen victory today? Ask me to draft a petition, generate titles, or create a sharing strategy!`
-          : `Bonjour ! 🐾 Je suis **PetBot IA**, votre agent IA autonome pour vos pétitions citoyennes.
+Comment puis-je vous aider à transformer votre idée en une victoire citoyenne aujourd'hui ? Demandez-moi de rédiger une pétition, de générer des titres, ou de créer une stratégie de partage !`
+          : `Bonjour ! 🐾 Je suis PetBot IA, votre agent IA autonome pour vos pétitions citoyennes.
 
 Comment puis-je vous aider à transformer votre combat en une victoire aujourd'hui ? Demandez-moi de rédiger un texte, d'inventer des titres ou d'établir une stratégie de partage !`;
 
       default:
         return isEn
-          ? `🤖 **PetBot AI Analysis for: "${userQuery}"**
+          ? `PetBot IA — Analyse pour : "${userQuery}" 🤖
 
-To give you the most powerful AI guidance on *"${userQuery}"*:
+Pour vous apporter les meilleurs conseils d'intelligence artificielle sur "${userQuery}" :
 
-1. **Strategic Perspective**: Transforming *"${userQuery}"* into a winning campaign requires clear messaging, an urgent title, and precise decision-maker targeting.
-2. **Action Steps**:
-   - Launch your petition on Apption selecting the appropriate scale (Local, National, International).
-   - Use our AI Copilot to generate social media sharing graphics and hashtags.
-   - Post regular updates on your petition's timeline to keep signers active.
+1. Perspective Stratégique : Transformer "${userQuery}" en une campagne gagnante nécessite un message clair, un titre percutant et une cible institutionnelle précise.
+2. Plan d'Action :
+   - Lancez votre pétition sur Apption en sélectionnant l'échelle appropriée (Locale, Nationale, Internationale).
+   - Utilisez notre Copilote IA pour générer des visuels et hashtags pour les réseaux sociaux.
+   - Publiez régulièrement des mises à jour sur le fil d'actualité de votre pétition pour maintenir les signataires actifs.
 
-Would you like me to draft a complete petition text or generate title ideas for this subject?`
-          : `🤖 **Analyse par PetBot IA pour : « ${userQuery} »**
+Souhaitez-vous que je rédige un texte complet de pétition ou que je vous propose des idées de titres pour ce sujet ?`
+          : `PetBot IA — Analyse pour : « ${userQuery} » 🤖
 
-Pour vous apporter les meilleurs conseils d'intelligence artificielle sur *« ${userQuery} »* :
+Pour vous apporter les meilleurs conseils d'intelligence artificielle sur « ${userQuery} » :
 
-1. **Perspective Stratégique** : Faire de *« ${userQuery} »* une victoire exige un message clair, un titre percutant et une cible institutionnelle précise.
-2. **Plan d'Action Recommandé** :
+1. Perspective Stratégique : Faire de « ${userQuery} » une victoire exige un message clair, un titre percutant et une cible institutionnelle précise.
+2. Plan d'Action Recommandé :
    - Lancez votre pétition sur Apption en choisissant l'échelle adaptée (Locale, Nationale, Internationale).
    - Utilisez notre Copilote IA pour générer vos visuels et hashtags de réseaux sociaux.
    - Publiez régulièrement des nouvelles sur le fil d'actualité pour maintenir l'engagement.

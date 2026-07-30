@@ -150,9 +150,10 @@ export default function PetBotWidget() {
                   <div
                     className={`max-w-[82%] px-4 py-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                       isBot
-                        ? "bg-neutral-900/60 border border-white/5 text-neutral-250 rounded-tl-sm font-light"
+                        ? "bg-neutral-900/60 border border-white/5 text-neutral-250 rounded-tl-sm"
                         : "bg-green-500/15 border border-green-500/20 text-white rounded-tr-sm font-medium"
                     }`}
+                    style={isBot ? { fontFamily: "'Times New Roman', Times, serif", fontWeight: 400 } : undefined}
                   >
                     {msg.content}
                   </div>
