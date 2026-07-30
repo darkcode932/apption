@@ -35,6 +35,7 @@ import ButtonClick from "../../../components/ButtonClick";
 import { useLanguage, useT } from "../../../../i18n/LanguageContext";
 import MilestoneCelebrationModal from "../../../components/MilestoneCelebrationModal";
 import PetBotViralStudioModal from "../../../components/PetBotViralStudioModal";
+import TargetDecisionMakersSection from "../../../components/TargetDecisionMakersSection";
 
 export default function PetitionDetailsPage() {
   const params = useParams();
@@ -400,13 +401,24 @@ export default function PetitionDetailsPage() {
 
           {/* TAB 1: LA CAUSE */}
           {activeLeftTab === "cause" && (
-            <div className="glass-card p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6 animate-fadeIn">
-              <h3 className="text-lg font-extrabold text-white font-display flex items-center space-x-2">
-                <span>Description & Objectifs</span>
-              </h3>
-              <div className="text-sm text-neutral-300 font-light leading-relaxed whitespace-pre-wrap">
-                {petition.description}
+            <div className="space-y-8 animate-fadeIn">
+              <div className="glass-card p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6">
+                <h3 className="text-lg font-extrabold text-white font-display flex items-center space-x-2">
+                  <span>Description & Objectifs</span>
+                </h3>
+                <div className="text-sm text-neutral-300 font-light leading-relaxed whitespace-pre-wrap">
+                  {petition.description}
+                </div>
               </div>
+
+              {/* Innovation 4: Suivi des Décideurs Ciblés & Réponses Officielles */}
+              <TargetDecisionMakersSection
+                targetAudience={petition.targetAudience || "Mairie & Autorités Locales"}
+                city={petition.city}
+                country={petition.country}
+                timelineEvents={timelineEvents}
+                petitionTitle={petition.title}
+              />
             </div>
           )}
 
