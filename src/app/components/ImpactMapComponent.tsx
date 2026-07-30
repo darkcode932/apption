@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Petition } from "../../domain/entities/Petition";
-import "leaflet/dist/leaflet.css";
 
 interface ImpactMapComponentProps {
   petitions: Petition[];

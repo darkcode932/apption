@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "../i18n/LanguageContext";
 
