@@ -196,13 +196,16 @@ export default function HomePage() {
       )}
 
       {/* Highlight Petition */}
-      <div className="space-y-6 relative z-10 pt-2">
-        <h2 className="text-center font-extrabold text-green-400 text-2xl tracking-wide uppercase sm:text-3xl font-display">
-          {t("home.featured")}
-        </h2>
+      <div className="space-y-4 relative z-10 pt-2">
+        <div className="flex items-center space-x-3">
+          <div className="h-6 w-1 bg-green-500 rounded-full" />
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white font-display tracking-tight">
+            {t("home.featured")}
+          </h2>
+        </div>
         {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-pulse bg-neutral-900/60 border border-white/5 rounded-3xl h-[350px] w-full max-w-5xl"></div>
+          <div className="flex justify-center py-4">
+            <div className="animate-pulse bg-neutral-900/60 border border-white/5 rounded-3xl h-[240px] w-full max-w-5xl"></div>
           </div>
         ) : (
           <HomePet petition={highlightPetition} />

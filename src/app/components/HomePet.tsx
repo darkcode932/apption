@@ -44,21 +44,21 @@ export default function HomePet({ petition }: HomePetProps) {
   const content = (
     <Link
       href={href}
-      className="group flex flex-col md:flex-row rounded-3xl overflow-hidden bg-neutral-900 border border-white/10 max-w-5xl w-full md:min-h-[380px] shadow-2xl hover:border-green-500/40 hover:shadow-green-500/10 transition-all duration-500 relative transform hover:-translate-y-1"
+      className="group flex flex-col md:flex-row rounded-3xl overflow-hidden bg-neutral-900 border border-white/10 max-w-5xl w-full shadow-2xl hover:border-green-500/40 hover:shadow-green-500/10 transition-all duration-500 relative transform hover:-translate-y-1"
     >
-      {/* Left Column: Hero Media Container */}
-      <div className="w-full md:w-1/2 h-[220px] md:h-auto relative overflow-hidden border-b md:border-b-0 md:border-r border-white/5 bg-neutral-950">
+      {/* Left Column: Hero Media — fixed height, no stretching */}
+      <div className="w-full md:w-5/12 h-[200px] md:h-auto relative overflow-hidden border-b md:border-b-0 md:border-r border-white/5 bg-neutral-950 md:min-h-0">
         <img
           alt={title}
           src={imageUrl}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-80" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent" />
 
-        {/* Top Floating Status Badge */}
-        <div className="absolute top-4 left-4 z-10 flex items-center space-x-1.5 py-1.5 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg bg-neutral-950/80 border border-white/10 backdrop-blur-md">
+        {/* Category / Victory badge */}
+        <div className="absolute top-3 left-3 z-10 flex items-center space-x-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg bg-neutral-950/85 border border-white/10 backdrop-blur-md">
           {isVictory ? (
             <>
               <HiTrophy className="text-xs text-amber-400 animate-bounce" />
@@ -72,55 +72,45 @@ export default function HomePet({ petition }: HomePetProps) {
           )}
         </div>
 
-        {/* City Location Tag if available */}
+        {/* City tag */}
         {city && (
-          <div className="absolute top-4 right-4 z-10 flex items-center space-x-1 py-1.5 px-3 rounded-full bg-neutral-950/80 text-neutral-300 text-[10px] font-mono border border-white/10 backdrop-blur-md">
+          <div className="absolute top-3 right-3 z-10 flex items-center space-x-1 py-1 px-2.5 rounded-full bg-neutral-950/85 text-neutral-300 text-[10px] font-mono border border-white/10 backdrop-blur-md">
             <HiMapPin className="text-xs text-cyan-400" />
             <span>{city}</span>
           </div>
         )}
+
+        {/* Views watermark bottom-left */}
+        <div className="absolute bottom-3 left-3 z-10 flex items-center space-x-1 text-[10px] font-mono text-neutral-400">
+          <HiEye className="text-neutral-500" />
+          <span>{views}</span>
+        </div>
       </div>
 
-      {/* Right Column: Content & Action Area */}
-      <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between space-y-6">
+      {/* Right Column: Compact Content */}
+      <div className="w-full md:w-7/12 p-5 flex flex-col justify-between gap-4">
         
-        <div className="space-y-3">
-          {/* Top Tag Header */}
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center space-x-1.5 font-extrabold text-green-400 uppercase tracking-widest text-[11px] font-display">
-              <HiSparkles className="text-sm" />
-              <span>{t("home.featured")}</span>
-            </span>
-
-            <span className="text-[11px] text-neutral-500 font-mono flex items-center space-x-1">
-              <HiEye className="text-neutral-400" />
-              <span>{views} vues</span>
-            </span>
-          </div>
-
-          {/* Title */}
-          <h3 className="font-extrabold text-xl sm:text-2xl text-white font-display leading-snug group-hover:text-green-400 transition-colors line-clamp-2">
+        {/* Title + Description */}
+        <div className="space-y-2">
+          <h3 className="font-extrabold text-lg sm:text-xl text-white font-display leading-snug group-hover:text-green-400 transition-colors line-clamp-2">
             {title}
           </h3>
-
-          {/* Description */}
-          <p className="text-neutral-400 text-xs sm:text-sm font-light leading-relaxed line-clamp-3">
+          <p className="text-neutral-400 text-xs font-light leading-relaxed line-clamp-2">
             {description}
           </p>
         </div>
 
         {/* Signature Progress Gauge */}
-        <div className="space-y-2 pt-2 border-t border-white/5">
-          <div className="flex items-center justify-between text-xs font-semibold">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-semibold">
             <span className="text-neutral-300 flex items-center space-x-1">
               <HiUserGroup className="text-green-400 text-sm" />
-              <strong className="text-white font-bold">{signaturesCount}</strong>
-              <span className="text-neutral-400">/ {nextGoal} {locale === "fr" ? "signataires" : "signatures"}</span>
+              <strong className="text-white font-bold">{signaturesCount.toLocaleString()}</strong>
+              <span className="text-neutral-400">/ {nextGoal.toLocaleString()} {locale === "fr" ? "signatures" : "signatures"}</span>
             </span>
             <span className="text-green-400 font-mono font-bold">{progressPercent}%</span>
           </div>
-
-          <div className="w-full h-2.5 bg-neutral-950 rounded-full overflow-hidden border border-white/5 p-0.5">
+          <div className="w-full h-2 bg-neutral-950 rounded-full overflow-hidden border border-white/5 p-0.5">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 isVictory
@@ -132,20 +122,20 @@ export default function HomePet({ petition }: HomePetProps) {
           </div>
         </div>
 
-        {/* Footer: Creator & CTA */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+        {/* Footer: Creator + CTA */}
+        <div className="flex items-center justify-between border-t border-white/5 pt-3">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 flex items-center justify-center font-bold text-white text-xs shadow-md">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 flex items-center justify-center font-bold text-white text-[10px] shadow-md flex-shrink-0">
               {creatorName.charAt(0).toUpperCase()}
             </div>
             <div className="flex items-center space-x-1">
-              <span className="font-bold text-white text-xs truncate max-w-[120px]">{creatorName}</span>
-              <HiCheckBadge className="text-green-400 text-sm" />
+              <span className="font-bold text-white text-xs truncate max-w-[110px]">{creatorName}</span>
+              <HiCheckBadge className="text-green-400 text-sm flex-shrink-0" />
             </div>
           </div>
 
           <div className="inline-flex items-center space-x-1.5 text-xs font-extrabold text-green-400 group-hover:translate-x-1 transition-all">
-            <span>{locale === "fr" ? "Soutenir cette cause" : "Support cause"}</span>
+            <span>{locale === "fr" ? "Soutenir" : "Support"}</span>
             <HiArrowRight className="text-sm" />
           </div>
         </div>
