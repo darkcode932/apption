@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -14,12 +14,17 @@ export default function AuthenticatedLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Public browsing routes allowed for guests without login redirect
+  const isPublicRoute =
+    pathname.startsWith("/petitions") || pathname === "/map";
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isPublicRoute) {
       router.push("/login");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isPublicRoute]);
 
   if (loading) {
     return (
@@ -30,7 +35,7 @@ export default function AuthenticatedLayout({
     );
   }
 
-  if (!user) {
+  if (!user && !isPublicRoute) {
     return null; // Prevents flashing content while redirecting
   }
 

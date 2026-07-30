@@ -152,141 +152,159 @@ export default function Navbar() {
                 >
                   <span>{locale === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}</span>
                 </button>
-
-                {/* Notifications dropdown */}
-                <Menu as="div" className="relative">
-                  <div>
-                    <Menu.Button className="relative rounded-full p-1.5 text-neutral-450 hover:text-white hover:bg-neutral-900/60 border border-transparent hover:border-white/5 focus:outline-none transition-all">
-                      <span className="sr-only">{t("navbar.notifications")}</span>
-                      <BellIcon className="h-5 w-5" aria-hidden="true" />
-                      {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 h-4.5 w-4.5 rounded-full bg-red-650 text-[8px] font-extrabold flex items-center justify-center text-white border-2 border-[#0b0b0f] translate-x-1 -translate-y-1">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </Menu.Button>
-                  </div>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Menu.Items className="absolute right-0 z-20 mt-2 w-80 origin-top-right rounded-2xl bg-neutral-900/95 border border-white/5 py-1.5 shadow-2xl backdrop-blur-md focus:outline-none">
-                      <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider font-display">{t("navbar.notifications")}</p>
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={handleMarkAllRead}
-                            className="text-[9px] font-bold text-green-455 hover:text-green-400 transition-colors uppercase tracking-wider cursor-pointer bg-transparent border-0"
-                          >
-                            {t("navbar.mark_all_read")}
-                          </button>
-                        )}
+                {user ? (
+                  <>
+                    {/* Notifications dropdown */}
+                    <Menu as="div" className="relative">
+                      <div>
+                        <Menu.Button className="relative rounded-full p-1.5 text-neutral-450 hover:text-white hover:bg-neutral-900/60 border border-transparent hover:border-white/5 focus:outline-none transition-all">
+                          <span className="sr-only">{t("navbar.notifications")}</span>
+                          <BellIcon className="h-5 w-5" aria-hidden="true" />
+                          {unreadCount > 0 && (
+                            <span className="absolute top-0 right-0 h-4.5 w-4.5 rounded-full bg-red-650 text-[8px] font-extrabold flex items-center justify-center text-white border-2 border-[#0b0b0f] translate-x-1 -translate-y-1">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </Menu.Button>
                       </div>
 
-                      <div className="max-h-72 overflow-y-auto divide-y divide-white/5 scrollbar-hidden">
-                        {notifications.map((notif) => (
-                          <Menu.Item key={notif.id}>
-                            {({ active }) => (
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute right-0 z-20 mt-2 w-80 origin-top-right rounded-2xl bg-neutral-900/95 border border-white/5 py-1.5 shadow-2xl backdrop-blur-md focus:outline-none">
+                          <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
+                            <p className="text-xs font-bold text-white uppercase tracking-wider font-display">{t("navbar.notifications")}</p>
+                            {unreadCount > 0 && (
                               <button
-                                onClick={() => handleNotificationClick(notif)}
+                                onClick={handleMarkAllRead}
+                                className="text-[9px] font-bold text-green-455 hover:text-green-400 transition-colors uppercase tracking-wider cursor-pointer bg-transparent border-0"
+                              >
+                                {t("navbar.mark_all_read")}
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="max-h-72 overflow-y-auto divide-y divide-white/5 scrollbar-hidden">
+                            {notifications.map((notif) => (
+                              <Menu.Item key={notif.id}>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleNotificationClick(notif)}
+                                    className={classNames(
+                                      active ? "bg-white/[0.02]" : "",
+                                      "w-full text-left px-4 py-3 flex items-start space-x-2.5 transition-all relative border-0 cursor-pointer bg-transparent",
+                                      !notif.read ? "bg-green-500/[0.01]" : ""
+                                    )}
+                                  >
+                                    {!notif.read && (
+                                      <span className="absolute left-2.5 top-4.5 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                    )}
+                                    <div className="pl-1.5 min-w-0 space-y-0.5">
+                                      <p className="text-xs font-bold text-white leading-tight font-display">{notif.title}</p>
+                                      <p className="text-[10px] text-neutral-400 font-light leading-snug">{notif.message}</p>
+                                      <p className="text-[8px] text-neutral-500 font-light pt-0.5">
+                                        {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
+                                          day: "2-digit",
+                                          month: "short",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </p>
+                                    </div>
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            ))}
+                            {notifications.length === 0 && (
+                              <div className="py-8 text-center text-xs text-neutral-500 italic">
+                                {t("navbar.no_notifications")}
+                              </div>
+                            )}
+                          </div>
+
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+
+                    {/* Profile dropdown */}
+                    <Menu as="div" className="relative ml-3">
+                      <div>
+                        <Menu.Button className="flex rounded-full bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30">
+                          <span className="sr-only">{t("navbar.user_menu")}</span>
+                          <img
+                            className="h-8 w-8 rounded-full border border-white/10"
+                            src={user?.email ? `https://api.dicebear.com/7.x/initials/svg?seed=${user.username || user.email}` : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
+                            alt="Profile avatar"
+                          />
+                        </Menu.Button>
+                      </div>
+
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-2xl bg-neutral-900/95 border border-white/5 py-1.5 shadow-2xl backdrop-blur-md focus:outline-none">
+                          <div className="px-4 py-2.5 border-b border-white/5">
+                            <p className="text-sm font-semibold text-white truncate">{user?.username || (locale === "fr" ? "Invité" : "Guest")}</p>
+                            <p className="text-[10px] text-neutral-455 truncate">{user?.email || ""}</p>
+                          </div>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                href="/profile"
                                 className={classNames(
-                                  active ? "bg-white/[0.02]" : "",
-                                  "w-full text-left px-4 py-3 flex items-start space-x-2.5 transition-all relative border-0 cursor-pointer bg-transparent",
-                                  !notif.read ? "bg-green-500/[0.01]" : ""
+                                  active ? "bg-neutral-800/60 text-white" : "text-neutral-350",
+                                  "block px-4 py-2 text-xs transition-colors font-medium"
                                 )}
                               >
-                                {!notif.read && (
-                                  <span className="absolute left-2.5 top-4.5 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                {t("navbar.profile")}
+                              </Link>
+                            )}
+                          </Menu.Item>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <button
+                                onClick={handleSignOut}
+                                className={classNames(
+                                  active ? "bg-neutral-800/60 text-red-400" : "text-red-450",
+                                  "block w-full text-left px-4 py-2 text-xs transition-colors font-semibold border-0 cursor-pointer bg-transparent"
                                 )}
-                                <div className="pl-1.5 min-w-0 space-y-0.5">
-                                  <p className="text-xs font-bold text-white leading-tight font-display">{notif.title}</p>
-                                  <p className="text-[10px] text-neutral-400 font-light leading-snug">{notif.message}</p>
-                                  <p className="text-[8px] text-neutral-500 font-light pt-0.5">
-                                    {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </p>
-                                </div>
+                              >
+                                {t("navbar.logout")}
                               </button>
                             )}
                           </Menu.Item>
-                        ))}
-                        {notifications.length === 0 && (
-                          <div className="py-8 text-center text-xs text-neutral-500 italic">
-                            {t("navbar.no_notifications")}
-                          </div>
-                        )}
-                      </div>
-
-                    </Menu.Items>
-                  </Transition>
-                </Menu>
-
-                {/* Profile dropdown */}
-                <Menu as="div" className="relative ml-3">
-                  <div>
-                    <Menu.Button className="flex rounded-full bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30">
-                      <span className="sr-only">{t("navbar.user_menu")}</span>
-                      <img
-                        className="h-8 w-8 rounded-full border border-white/10"
-                        src={user?.email ? `https://api.dicebear.com/7.x/initials/svg?seed=${user.username || user.email}` : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
-                        alt="Profile avatar"
-                      />
-                    </Menu.Button>
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+                  </>
+                ) : (
+                  <div className="flex items-center space-x-3 pl-2">
+                    <Link
+                      href="/login"
+                      className="text-xs font-bold text-neutral-300 hover:text-white px-3 py-1.5 rounded-xl transition-colors"
+                    >
+                      {locale === "fr" ? "Se connecter" : "Log in"}
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="text-xs font-extrabold text-neutral-950 bg-green-500 hover:bg-green-400 px-3.5 py-1.5 rounded-xl shadow-md transition-all"
+                    >
+                      {locale === "fr" ? "Rejoindre" : "Join"}
+                    </Link>
                   </div>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Menu.Items className="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-2xl bg-neutral-900/95 border border-white/5 py-1.5 shadow-2xl backdrop-blur-md focus:outline-none">
-                      <div className="px-4 py-2.5 border-b border-white/5">
-                        <p className="text-sm font-semibold text-white truncate">{user?.username || (locale === "fr" ? "Invité" : "Guest")}</p>
-                        <p className="text-[10px] text-neutral-455 truncate">{user?.email || ""}</p>
-                      </div>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <Link
-                            href="/profile"
-                            className={classNames(
-                              active ? "bg-neutral-800/60 text-white" : "text-neutral-350",
-                              "block px-4 py-2 text-xs transition-colors font-medium"
-                            )}
-                          >
-                            {t("navbar.profile")}
-                          </Link>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={handleSignOut}
-                            className={classNames(
-                              active ? "bg-neutral-800/60 text-red-400" : "text-neutral-350",
-                              "block w-full text-left px-4 py-2 text-xs transition-colors font-semibold border-0 cursor-pointer bg-transparent"
-                            )}
-                          >
-                            {t("navbar.logout")}
-                          </button>
-                        )}
-                      </Menu.Item>
-                    </Menu.Items>
-                  </Transition>
-                </Menu>
+                )}
               </div>
 
 
