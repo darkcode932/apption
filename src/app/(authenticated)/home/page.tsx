@@ -115,31 +115,58 @@ export default function HomePage() {
       <div className="absolute top-1/4 left-10 w-80 h-80 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/3 right-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Banner Section */}
-      <div className="flex flex-col items-center justify-center space-y-8 relative z-10">
-        <div className="glass-card flex flex-col items-center justify-center space-y-4 text-white mx-auto px-6 py-14 bg-back5 bg-cover bg-center rounded-3xl w-full border border-white/5 shadow-2xl relative overflow-hidden text-center min-h-[260px]">
-          <div className="absolute inset-0 bg-[#0b0b0f]/75 mix-blend-multiply" />
-          
-          <span className="relative z-10 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-full uppercase tracking-wider">
-            {t("home.global_change")}
-          </span>
-          
-          <h1 className="relative z-10 text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight text-white drop-shadow-md">
-            {t("home.title_primary")}
-            <span className="text-red-500">{t("home.title_history")}</span>
-          </h1>
-          <p className="relative z-10 font-light text-neutral-350 sm:text-lg max-w-2xl">
-            {t("home.tagline")}
-          </p>
-        </div>
+      {/* Hero Banner Section */}
+      <div className="relative z-10 p-8 sm:p-12 rounded-3xl bg-neutral-900 border border-white/10 shadow-2xl flex flex-col items-center justify-center space-y-6 text-center overflow-hidden">
         
-        <Link href="/launch-petition">
-          <ButtonClick
-            text={t("home.launch_button")}
-            classButton="rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 px-10 py-4.5 shadow-xl shadow-red-950/20 transition-all text-lg font-bold"
-            classArrow="text-2xl"
-          />
-        </Link>
+        {/* Top Ambient Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-green-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+        {/* Top Pill Badge */}
+        <span className="relative z-10 px-4 py-1 rounded-full bg-neutral-950 border border-green-500/30 text-green-400 text-xs font-black uppercase tracking-widest flex items-center space-x-1.5 shadow-sm">
+          <span>🌱</span>
+          <span>{t("home.global_change")}</span>
+        </span>
+
+        {/* Main Title */}
+        <h1 className="relative z-10 text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight text-white font-display">
+          {t("home.title_primary")}
+          <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            {t("home.title_history")}
+          </span>
+        </h1>
+
+        {/* Subtitle Tagline */}
+        <p className="relative z-10 font-light text-neutral-300 sm:text-lg max-w-2xl leading-relaxed">
+          {t("home.tagline")}
+        </p>
+
+        {/* CTA Launch Button */}
+        <div className="relative z-10 pt-2">
+          <Link href="/launch-petition">
+            <ButtonClick
+              text={t("home.launch_button")}
+              classButton="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 px-8 py-3.5 shadow-lg shadow-green-500/20 transition-all text-sm font-black uppercase tracking-wider cursor-pointer"
+              classArrow="text-xl"
+            />
+          </Link>
+        </div>
+
+        {/* Quick Impact Stats Row */}
+        <div className="pt-6 border-t border-white/5 w-full max-w-2xl grid grid-cols-3 gap-4 text-center text-xs text-neutral-400 relative z-10">
+          <div>
+            <strong className="text-white font-bold block text-sm sm:text-base">120,000+</strong>
+            <span>Signatures</span>
+          </div>
+          <div>
+            <strong className="text-amber-400 font-bold block text-sm sm:text-base">850+</strong>
+            <span>Victoires</span>
+          </div>
+          <div>
+            <strong className="text-cyan-400 font-bold block text-sm sm:text-base">150+</strong>
+            <span>Pays</span>
+          </div>
+        </div>
+
       </div>
 
       {/* Geotargeted Switch */}
@@ -170,7 +197,7 @@ export default function HomePage() {
 
       {/* Highlight Petition */}
       <div className="space-y-6 relative z-10 pt-2">
-        <h2 className="text-center font-extrabold text-red-500 text-2xl tracking-wide uppercase sm:text-3xl font-display">
+        <h2 className="text-center font-extrabold text-green-400 text-2xl tracking-wide uppercase sm:text-3xl font-display">
           {t("home.featured")}
         </h2>
         {loading ? (
