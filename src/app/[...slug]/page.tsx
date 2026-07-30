@@ -1,5 +1,5 @@
 import NotFound from "../not-found";
 
-export default function CatchAllNotFound() {
+export default function CatchAllSlugPage() {
   return <NotFound />;
 }
