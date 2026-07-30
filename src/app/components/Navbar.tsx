@@ -10,6 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { signOutUseCase, petitionRepository } from "../../infrastructure/ServiceLocator";
 import { Notification } from "../../domain/entities/Notification";
 import { useLanguage, useT } from "../../i18n/LanguageContext";
+import SearchModal from "./SearchModal";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -21,6 +22,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { locale, setLocale } = useLanguage();
   const t = useT();
 
@@ -32,6 +34,17 @@ export default function Navbar() {
     { name: t("navbar.my_petitions"), href: "/my-petitions" },
   ];
 
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -76,7 +89,8 @@ export default function Navbar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <Disclosure as="nav" className="sticky top-0 z-50 bg-[#0b0b0f]/80 backdrop-blur-md border-b border-white/5 shadow-lg transition-all duration-300">
+    <>
+      <Disclosure as="nav" className="sticky top-0 z-50 bg-[#0b0b0f]/80 backdrop-blur-md border-b border-white/5 shadow-lg transition-all duration-300">
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -111,23 +125,20 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Search Bar */}
+              {/* Animated Spotlight Search Trigger Button */}
               <div className="flex-1 max-w-xs mx-4 hidden sm:block">
-                <label htmlFor="search" className="sr-only">
-                  Search
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="w-full flex items-center justify-between rounded-full border border-white/5 bg-neutral-900/50 hover:bg-neutral-900 hover:border-green-500/40 py-1.5 px-3 text-xs text-neutral-400 hover:text-white transition-all duration-300 group cursor-pointer shadow-sm"
+                >
+                  <div className="flex items-center space-x-2">
+                    <MagnifyingGlassIcon className="h-4 w-4 text-neutral-500 group-hover:text-green-400 transition-colors" aria-hidden="true" />
+                    <span className="font-light">{t("navbar.search_placeholder")}</span>
                   </div>
-                  <input
-                    id="search"
-                    name="search"
-                    className="block w-full rounded-full border border-neutral-800 bg-neutral-900/50 py-1.5 pl-9 pr-3 text-xs text-white placeholder-neutral-500 focus:border-green-500/70 focus:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-green-500/20 transition-all"
-                    placeholder={t("navbar.search_placeholder")}
-                    type="search"
-                  />
-                </div>
+                  <kbd className="hidden md:inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-md bg-neutral-950 border border-white/10 text-[9px] font-mono text-neutral-400 group-hover:text-neutral-200">
+                    <span>Ctrl K</span>
+                  </kbd>
+                </button>
               </div>
 
 
@@ -362,5 +373,9 @@ export default function Navbar() {
         </>
       )}
     </Disclosure>
+
+    {/* Spotlight Omni-Search Modal */}
+    <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+    </>
   );
 }
