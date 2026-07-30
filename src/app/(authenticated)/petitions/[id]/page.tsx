@@ -37,6 +37,7 @@ import MilestoneCelebrationModal from "../../../components/MilestoneCelebrationM
 import PetBotViralStudioModal from "../../../components/PetBotViralStudioModal";
 import TargetDecisionMakersSection from "../../../components/TargetDecisionMakersSection";
 import SimilarPetitionsSection from "../../../components/SimilarPetitionsSection";
+import NotFound from "../../../not-found";
 
 export default function PetitionDetailsPage() {
   const params = useParams();
@@ -293,13 +294,7 @@ export default function PetitionDetailsPage() {
   }
 
   if (error || !petition) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-16 w-full flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-        <HiExclamationCircle className="text-5xl text-red-500" />
-        <h2 className="text-xl font-extrabold text-white">{error || "Pétition introuvable"}</h2>
-        <ButtonClick text="Retour aux pétitions" onClick={() => router.push("/petitions")} />
-      </div>
-    );
+    return <NotFound />;
   }
 
   return (
