@@ -21,6 +21,7 @@ import { Petition } from "../../../domain/entities/Petition";
 import { User } from "../../../domain/entities/User";
 import { useLanguage, useT } from "../../../i18n/LanguageContext";
 import AdminGisMap from "../components/AdminGisMap";
+import AdminAiWatchtower from "../components/AdminAiWatchtower";
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage();
@@ -297,6 +298,9 @@ export default function AdminDashboardPage() {
 
       {/* GIS Regional Impact & City Density Map (Axe 2) */}
       <AdminGisMap petitions={petitions} />
+
+      {/* AI Hate Speech Watchtower & Decision Makers Tracker (Axe 3) */}
+      <AdminAiWatchtower />
 
       {/* Top Petitions Engagement Table */}
       <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
