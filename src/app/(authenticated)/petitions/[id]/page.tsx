@@ -33,6 +33,8 @@ import { TimelineEvent } from "../../../../domain/entities/TimelineEvent";
 import { Signature } from "../../../../domain/entities/Signature";
 import ButtonClick from "../../../components/ButtonClick";
 import { useLanguage, useT } from "../../../../i18n/LanguageContext";
+import MilestoneCelebrationModal from "../../../components/MilestoneCelebrationModal";
+import PetBotViralStudioModal from "../../../components/PetBotViralStudioModal";
 
 export default function PetitionDetailsPage() {
   const params = useParams();
@@ -50,6 +52,8 @@ export default function PetitionDetailsPage() {
   const [signing, setSigning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [showViralStudioModal, setShowViralStudioModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [viewIncremented, setViewIncremented] = useState(false);
@@ -163,6 +167,7 @@ export default function PetitionDetailsPage() {
       );
       setShowSignModal(false);
       setSignReason("");
+      setShowCelebrationModal(true);
     } catch (err: any) {
       setSignError(err.message || "Erreur lors de la signature.");
     } finally {
@@ -626,6 +631,15 @@ export default function PetitionDetailsPage() {
                   <HiEnvelope className="text-sm" />
                 </button>
               </div>
+
+              {/* Launch PetBot Viral Studio Button */}
+              <button
+                onClick={() => setShowViralStudioModal(true)}
+                className="w-full py-3 px-4 rounded-2xl bg-neutral-950 hover:bg-green-500/10 border border-green-500/30 text-green-400 font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md mt-2"
+              >
+                <HiSparkles className="text-base text-green-400 animate-pulse" />
+                <span>Générer un visuel Story 9:16 (PetBot Studio)</span>
+              </button>
             </div>
 
           </div>
@@ -675,6 +689,28 @@ export default function PetitionDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Innovation 1: Milestone Celebration Modal */}
+      <MilestoneCelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        petitionTitle={petition?.title || ""}
+        milestoneCount={petition?.signaturesCount || 1}
+        isVictory={petition?.status === "victory"}
+        onOpenViralStudio={() => setShowViralStudioModal(true)}
+      />
+
+      {/* Innovation 2: PetBot Viral Studio Modal */}
+      <PetBotViralStudioModal
+        isOpen={showViralStudioModal}
+        onClose={() => setShowViralStudioModal(false)}
+        petitionTitle={petition?.title || ""}
+        category={petition?.category || "Mobilisation"}
+        signaturesCount={petition?.signaturesCount || 1}
+        goalCount={nextGoal}
+        city={petition?.city || "Douala"}
+        creatorName={petition?.creatorName || "Russel Atebede"}
+      />
 
     </div>
   );
