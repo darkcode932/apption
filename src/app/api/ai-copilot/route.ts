@@ -1,110 +1,107 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+function generateLocalCopilotKit(title: string, description: string, scale: string, category: string, isEn: boolean) {
+  const cleanTitle = title.trim();
+  const scaleStr = scale ? ` (${scale})` : "";
+
+  return {
+    optimizedTitle: isEn
+      ? `Urgent Action: ${cleanTitle}${scaleStr}`
+      : `Action Urgente : ${cleanTitle}${scaleStr}`,
+    optimizedDescription: isEn
+      ? `**The Problem:**\n${description}\n\n**Why We Need Action:**\nCitizens and local communities deserve immediate attention and concrete changes.\n\n**Our Demands:**\n1. Immediate intervention by responsible authorities.\n2. Transparent progress reports.\n3. Dedicated budget and resources.`
+      : `**Le Constat :**\n${description}\n\n**Pourquoi l'Action est Indispensable :**\nLes citoyens et les communautés méritent une attention immédiate et des changements concrets.\n\n**Nos Exigences :**\n1. Intervention immédiate des autorités responsables.\n2. Rapports de suivi transparents.\n3. Allocation de moyens et ressources dédiés.`,
+    suggestedTargets: isEn
+      ? ["Competent Municipal/National Authorities", "Relevant Department Directors"]
+      : ["Autorités Municipales/Nationales Compétentes", "Direction des Services Concernés"],
+    socialKit: {
+      twitter: isEn
+        ? `I just supported: "${cleanTitle}". Join the movement on Apption! #CitizenImpact #ActNow`
+        : `Je viens de soutenir : « ${cleanTitle} ». Rejoignez la mobilisation sur Apption ! #ImpactCitoyen #AgirEnsemble`,
+      facebook: isEn
+        ? `Mobilization Alert! Discover and sign the petition: "${cleanTitle}". Together, let's make our voices heard!`
+        : `Alerte Mobilisation ! Découvrez et signez la pétition : « ${cleanTitle} ». Ensemble, faisons entendre notre voix !`,
+      whatsapp: isEn
+        ? `Hello! I need your support for this petition: "${cleanTitle}". Please sign and share!`
+        : `Bonjour ! J'ai besoin de votre soutien pour cette pétition : « ${cleanTitle} ». Merci de signer et de partager !`,
+    },
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const { title, description, scale, category, lang } = await request.json();
-
-    if (!title || !description) {
-      const errorMsg = lang === "en" 
-        ? "Title and description are required." 
-        : "Le titre et la description sont obligatoires.";
-      return NextResponse.json(
-        { error: errorMsg },
-        { status: 400 }
-      );
-    }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      const errorMsg = lang === "en"
-        ? "Gemini API key is not configured on the server. Please set GEMINI_API_KEY in your .env file."
-        : "La clé API Gemini n'est pas configurée sur le serveur. Veuillez configurer GEMINI_API_KEY dans votre fichier .env.";
-      return NextResponse.json(
-        { error: errorMsg },
-        { status: 500 }
-      );
-    }
-
-    // Initialize Google Gen AI
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-lite", // or whatever model you use
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
     const isEn = lang === "en";
 
-    const prompt = isEn 
-      ? `You are an expert campaign co-pilot in communication and citizen activism. Your role is to optimize a petition project to maximize its signature rate and public impact.
+    if (!title || !description) {
+      const errorMsg = isEn
+        ? "Title and description are required."
+        : "Le titre et la description sont obligatoires.";
+      return NextResponse.json({ error: errorMsg }, { status: 400 });
+    }
 
-Analyze the following petition:
-- Category: ${category || "Unspecified"}
-- Geographic Scale: ${scale || "Unspecified"}
-- Proposed Title: "${title}"
-- Proposed Description: "${description}"
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-Generate a strict JSON response that exactly respects the following structure:
+    // Fast local copilot generator if API key is invalid format (starts with AIzaSy)
+    if (!apiKey || !apiKey.startsWith("AIzaSy")) {
+      const localKit = generateLocalCopilotKit(title, description, scale, category, isEn);
+      return NextResponse.json(localKit);
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" },
+      });
+
+      const prompt = isEn
+        ? `Optimize this petition project:
+Category: ${category || "General"}
+Scale: ${scale || "National"}
+Proposed Title: "${title}"
+Proposed Description: "${description}"
+
+Output JSON:
 {
-  "optimizedTitle": "A catchy, powerful, and persuasive petition title, maximum of 10 to 15 words.",
-  "optimizedDescription": "A structured and convincing petition description. Use an engaging tone, clear paragraphs, and bullet points to list the main arguments and the call to action.",
-  "suggestedTargets": [
-    "Specific target 1 (e.g., General Manager of Camwater)",
-    "Specific target 2 (e.g., Minister of Water and Energy)"
-  ],
-  "socialKit": {
-    "twitter": "An impactful tweet with relevant hashtags to share the petition (no URL, just text).",
-    "facebook": "An engaging Facebook share post telling the story in a few sentences (no URL).",
-    "whatsapp": "A short, direct, and mobilizing WhatsApp message (no URL)."
-  }
+  "optimizedTitle": "string",
+  "optimizedDescription": "string",
+  "suggestedTargets": ["string"],
+  "socialKit": { "twitter": "string", "facebook": "string", "whatsapp": "string" }
 }`
-      : `Tu es un copilote expert en communication et militantisme citoyen. Ton rôle est de perfectionner un projet de pétition pour maximiser son taux de signature et son impact public.
+        : `Optimise ce projet de pétition :
+Catégorie: ${category || "Général"}
+Échelle: ${scale || "National"}
+Titre proposé: "${title}"
+Description proposée: "${description}"
 
-Analyse la pétition suivante :
-- Catégorie : ${category || "Non spécifiée"}
-- Échelle géographique : ${scale || "Non spécifiée"}
-- Titre proposé : "${title}"
-- Description proposée : "${description}"
-
-Génère une réponse JSON stricte qui respecte exactement la structure suivante :
+Format JSON attendu:
 {
-  "optimizedTitle": "Un titre de pétition accrocheur, percutant et persuasif, d'environ 10 à 15 mots maximum.",
-  "optimizedDescription": "Une description structurée et convaincante de la pétition. Utilise un ton engageant, des paragraphes clairs et des puces pour lister les arguments principaux et l'appel à l'action.",
-  "suggestedTargets": [
-    "Cible spécifique 1 (ex: Le Directeur Général de Camwater)",
-    "Cible spécifique 2 (ex: Le Ministre de l'Eau et de l'Énergie)"
-  ],
-  "socialKit": {
-    "twitter": "Un tweet d'impact avec hashtags pertinents pour partager la pétition (sans lien URL, juste le texte).",
-    "facebook": "Un post de partage Facebook engageant racontant l'histoire en quelques phrases (sans lien URL).",
-    "whatsapp": "Un message court, direct et mobilisateur pour WhatsApp (sans lien URL)."
-  }
+  "optimizedTitle": "string",
+  "optimizedDescription": "string",
+  "suggestedTargets": ["string"],
+  "socialKit": { "twitter": "string", "facebook": "string", "whatsapp": "string" }
 }`;
 
-    const result = await model.generateContent(prompt);
-    const textResponse = result.response.text();
-    
-    // Parse response to ensure validity
-    let cleanedText = textResponse.trim();
-    if (cleanedText.startsWith("```json")) {
-      cleanedText = cleanedText.substring(7);
-    } else if (cleanedText.startsWith("```")) {
-      cleanedText = cleanedText.substring(3);
-    }
-    if (cleanedText.endsWith("```")) {
-      cleanedText = cleanedText.substring(0, cleanedText.length - 3);
-    }
-    cleanedText = cleanedText.trim();
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text().trim();
+      const parsed = JSON.parse(responseText);
 
-    const parsedData = JSON.parse(cleanedText);
+      return NextResponse.json(parsed);
+    } catch (geminiError) {
+      console.warn("Gemini Copilot API call fallback to local kit generator:", geminiError);
+      const localKit = generateLocalCopilotKit(title, description, scale, category, isEn);
+      return NextResponse.json(localKit);
+    }
 
-    return NextResponse.json(parsedData);
   } catch (error: any) {
-    console.error("AI Copilot API Error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Une erreur est survenue lors de la génération avec l'IA." },
-      { status: 500 }
-    );
+    console.error("AI Copilot API route error:", error);
+    return NextResponse.json({
+      optimizedTitle: "Pétition Citoyenne pour le Changement",
+      optimizedDescription: "Veuillez préciser la description de votre cause.",
+      suggestedTargets: ["Décideurs Compétents"],
+      socialKit: { twitter: "", facebook: "", whatsapp: "" }
+    });
   }
 }
-

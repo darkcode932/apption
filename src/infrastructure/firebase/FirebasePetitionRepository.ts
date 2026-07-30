@@ -26,6 +26,15 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebasePetitionRepository implements PetitionRepository {
+  private cachedPetitions: Petition[] | null = null;
+  private cacheTimestamp: number = 0;
+  private CACHE_TTL_MS = 5000; // 5 seconds in-memory cache
+
+  public invalidateCache() {
+    this.cachedPetitions = null;
+    this.cacheTimestamp = 0;
+  }
+
   private mapDocToPetition(id: string, data: any): Petition {
     let rawDate: Date;
     if (data.createdAt && typeof data.createdAt.toDate === "function") {
@@ -118,6 +127,7 @@ export class FirebasePetitionRepository implements PetitionRepository {
     };
 
     const docRef = await addDoc(collection(db, "petition"), petitionData);
+    this.invalidateCache();
     return this.mapDocToPetition(docRef.id, petitionData);
   }
 
@@ -128,23 +138,28 @@ export class FirebasePetitionRepository implements PetitionRepository {
   }
 
   async getAllPetitions(category?: string, scale?: string): Promise<Petition[]> {
-    const petitionCol = collection(db, "petition");
-    let q = query(petitionCol, orderBy("createdAt", "desc"));
+    const now = Date.now();
+    let allPetitions: Petition[];
 
-    if (category && scale) {
-      q = query(petitionCol, where("category", "==", category), where("scale", "==", scale), orderBy("createdAt", "desc"));
-    } else if (category) {
-      q = query(petitionCol, where("category", "==", category), orderBy("createdAt", "desc"));
-    } else if (scale) {
-      q = query(petitionCol, where("scale", "==", scale), orderBy("createdAt", "desc"));
+    if (this.cachedPetitions && now - this.cacheTimestamp < this.CACHE_TTL_MS) {
+      allPetitions = this.cachedPetitions;
+    } else {
+      const petitionCol = collection(db, "petition");
+      const q = query(petitionCol, orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      allPetitions = [];
+      snapshot.forEach((doc) => {
+        allPetitions.push(this.mapDocToPetition(doc.id, doc.data()));
+      });
+      this.cachedPetitions = allPetitions;
+      this.cacheTimestamp = now;
     }
 
-    const snapshot = await getDocs(q);
-    const petitions: Petition[] = [];
-    snapshot.forEach((doc) => {
-      petitions.push(this.mapDocToPetition(doc.id, doc.data()));
+    return allPetitions.filter((p) => {
+      if (category && p.category !== category) return false;
+      if (scale && p.scale !== scale) return false;
+      return true;
     });
-    return petitions;
   }
 
   async getPetitionsByUserId(userId: string): Promise<Petition[]> {
