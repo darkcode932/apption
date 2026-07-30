@@ -27,12 +27,18 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebasePetitionRepository implements PetitionRepository {
   private cachedPetitions: Petition[] | null = null;
+  private petitionByIdCache = new Map<string, { data: Petition; timestamp: number }>();
   private cacheTimestamp: number = 0;
   private CACHE_TTL_MS = 5000; // 5 seconds in-memory cache
 
-  public invalidateCache() {
+  public invalidateCache(petitionId?: string) {
     this.cachedPetitions = null;
     this.cacheTimestamp = 0;
+    if (petitionId) {
+      this.petitionByIdCache.delete(petitionId);
+    } else {
+      this.petitionByIdCache.clear();
+    }
   }
 
   private mapDocToPetition(id: string, data: any): Petition {
@@ -132,9 +138,17 @@ export class FirebasePetitionRepository implements PetitionRepository {
   }
 
   async getPetitionById(id: string): Promise<Petition | null> {
+    const now = Date.now();
+    const cached = this.petitionByIdCache.get(id);
+    if (cached && now - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.data;
+    }
+
     const docSnap = await getDoc(doc(db, "petition", id));
     if (!docSnap.exists()) return null;
-    return this.mapDocToPetition(docSnap.id, docSnap.data());
+    const pet = this.mapDocToPetition(docSnap.id, docSnap.data());
+    this.petitionByIdCache.set(id, { data: pet, timestamp: now });
+    return pet;
   }
 
   async getAllPetitions(category?: string, scale?: string): Promise<Petition[]> {
@@ -148,8 +162,10 @@ export class FirebasePetitionRepository implements PetitionRepository {
       const q = query(petitionCol, orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
       allPetitions = [];
-      snapshot.forEach((doc) => {
-        allPetitions.push(this.mapDocToPetition(doc.id, doc.data()));
+      snapshot.forEach((docSnap) => {
+        const pet = this.mapDocToPetition(docSnap.id, docSnap.data());
+        allPetitions.push(pet);
+        this.petitionByIdCache.set(pet.id, { data: pet, timestamp: now });
       });
       this.cachedPetitions = allPetitions;
       this.cacheTimestamp = now;

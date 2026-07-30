@@ -18,12 +18,22 @@ import { doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, Timestamp 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export class FirebaseAuthRepository implements AuthRepository {
+  private userCache = new Map<string, { data: User; timestamp: number }>();
+  private CACHE_TTL_MS = 10000; // 10 seconds cache
+
   private async fetchUserData(uid: string, email: string): Promise<User> {
+    const now = Date.now();
+    const cached = this.userCache.get(uid);
+    if (cached && now - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.data;
+    }
+
     const userDocRef = doc(db, "users", uid);
     const docSnap = await getDoc(userDocRef);
+    let userData: User;
     if (docSnap.exists()) {
       const data = docSnap.data();
-      return {
+      userData = {
         id: uid,
         email: email,
         firstname: data.firstname || "",
@@ -40,20 +50,24 @@ export class FirebaseAuthRepository implements AuthRepository {
         city: data.city || "",
         role: data.role || "user",
       };
+    } else {
+      userData = {
+        id: uid,
+        email: email,
+        firstname: "",
+        lastname: "",
+        username: email.split("@")[0],
+        bio: "",
+        location: "",
+        avatarUrl: "",
+        isVerified: false,
+        officialTitle: "",
+        role: "user",
+      };
     }
-    return {
-      id: uid,
-      email: email,
-      firstname: "",
-      lastname: "",
-      username: email.split("@")[0],
-      bio: "",
-      location: "",
-      avatarUrl: "",
-      isVerified: false,
-      officialTitle: "",
-      role: "user",
-    };
+
+    this.userCache.set(uid, { data: userData, timestamp: now });
+    return userData;
   }
 
   /**
