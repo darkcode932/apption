@@ -29,8 +29,8 @@ export default function Footer() {
     { label: isFr ? "Nos Victoires" : "Our Victories", href: "/petitions" },
     { label: isFr ? "Pétitions Populaires" : "Popular Petitions", href: "/petitions" },
     { label: isFr ? "Causes Locales" : "Local Causes", href: "/map" },
-    { label: isFr ? "Comment ça marche" : "How It Works", href: "/home" },
-    { label: "FAQ", href: "/home" },
+    { label: isFr ? "Comment ça marche" : "How It Works", href: "/comment-ca-marche" },
+    { label: "FAQ", href: "/faq" },
   ];
 
   const stats = [
