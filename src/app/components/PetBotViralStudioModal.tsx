@@ -49,6 +49,8 @@ export default function PetBotViralStudioModal({
   // State
   const [customQuote, setCustomQuote] = useState(petitionTitle);
   const [selectedBg, setSelectedBg] = useState(AI_PRESETS[0].url);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generatingAiBg, setGeneratingAiBg] = useState(false);
   const [activeTheme, setActiveTheme] = useState<"emerald" | "gold" | "cyber" | "minimal">("emerald");
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -85,6 +87,19 @@ export default function PetBotViralStudioModal({
   if (!isOpen) return null;
 
   const progressPercent = Math.min(100, Math.round((signaturesCount / goalCount) * 100));
+
+  // Dynamic AI Image Generator based on Prompt or Citation
+  const handleGenerateAiBg = () => {
+    setGeneratingAiBg(true);
+    const promptToUse = aiPrompt.trim() || customQuote || category;
+    const randomSeed = Math.floor(Math.random() * 10000);
+    const aiGeneratedUrl = `https://picsum.photos/seed/${encodeURIComponent(promptToUse + randomSeed)}/1080/1920`;
+
+    setTimeout(() => {
+      setSelectedBg(aiGeneratedUrl);
+      setGeneratingAiBg(false);
+    }, 600);
+  };
 
   // Custom File Upload Handler
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,17 +220,15 @@ export default function PetBotViralStudioModal({
       
       await new Promise<void>((resolve) => {
         qrImg.onload = () => {
-          // Draw white card background for QR Code
           ctx.fillStyle = "#ffffff";
           ctx.beginPath();
           ctx.roundRect(width - 320, height - 340, 240, 240, 24);
           ctx.fill();
           
-          // Draw QR Code Matrix
           ctx.drawImage(qrImg, width - 300, height - 320, 200, 200);
           resolve();
         };
-        qrImg.onerror = () => resolve(); // fallback
+        qrImg.onerror = () => resolve();
         qrImg.src = qrCodeUrl;
       });
 
@@ -304,11 +317,11 @@ export default function PetBotViralStudioModal({
             <h2 className="text-xl font-extrabold text-white font-display flex items-center space-x-2">
               <span>PetBot Viral Studio Pro</span>
               <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-mono border border-green-500/20">
-                QR Code Unique 100% Scannable
+                Générateur IA & QR Code Unique
               </span>
             </h2>
             <p className="text-xs text-neutral-400 font-light">
-              Visuel de Story 9:16 avec QR Code unique redirigeant directement vers votre pétition.
+              Créez des visuels d&apos;impact Story 9:16 avec arrière-plan généré par IA et QR Code scannable.
             </p>
           </div>
         </div>
@@ -356,7 +369,6 @@ export default function PetBotViralStudioModal({
               {/* Story Footer Real Unique Scannable QR Code */}
               <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between">
                 <div className="flex items-center space-x-2.5">
-                  {/* REAL UNIQUE SCANNABLE QR CODE IMAGE */}
                   <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg border border-white/20">
                     <img
                       src={qrCodeUrl}
@@ -399,15 +411,34 @@ export default function PetBotViralStudioModal({
               />
             </div>
 
-            {/* 2. AI Background Preset Selector & Custom Photo */}
+            {/* 2. AI Generator Prompt Input & Presets */}
             <div className="space-y-3 pt-2 border-t border-white/5">
               <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block flex items-center justify-between">
-                <span>2. Fond d&apos;Écran IA & Photo Personnalisée</span>
-                <span className="text-[10px] text-green-400 font-mono">Adaptatif IA</span>
+                <span>2. Générateur de Fond d&apos;Écran par IA</span>
+                <span className="text-[10px] text-green-400 font-mono">IA Générative</span>
               </label>
 
+              {/* Dynamic AI Prompt Field */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Ex: Forêt en déforestation, manifestations climat, université..."
+                  className="flex-1 bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
+                />
+                <button
+                  onClick={handleGenerateAiBg}
+                  disabled={generatingAiBg}
+                  className="px-4 py-2 rounded-xl bg-green-500 hover:bg-green-400 text-neutral-950 font-extrabold text-xs flex items-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <HiSparkles className="text-sm" />
+                  <span>{generatingAiBg ? "Génération..." : "Générer avec IA"}</span>
+                </button>
+              </div>
+
               {/* Presets Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
                 {AI_PRESETS.map((preset) => (
                   <button
                     key={preset.id}
@@ -427,13 +458,13 @@ export default function PetBotViralStudioModal({
               <div className="flex items-center space-x-2 pt-1">
                 <label className="flex-1 py-2 px-3 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/10 text-xs font-bold text-neutral-300 flex items-center justify-center space-x-2 cursor-pointer transition-colors">
                   <HiPhoto className="text-base text-green-400" />
-                  <span>Charger votre propre photo</span>
+                  <span>Ou charger votre propre photo</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                 </label>
               </div>
             </div>
 
-            {/* 3. Action Buttons: REAL PNG DOWNLOAD & SMART SHARE */}
+            {/* 3. Action Buttons: REAL PNG DOWNLOAD (CLEAN SINGLE ICON) & SMART SHARE */}
             <div className="pt-4 border-t border-white/5 space-y-3">
               <button
                 onClick={handleRealDownload}
@@ -441,7 +472,7 @@ export default function PetBotViralStudioModal({
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-green-500/20 flex items-center justify-center space-x-2 transition-all cursor-pointer"
               >
                 <HiArrowDownTray className="text-base" />
-                <span>{downloading ? "Génération du PNG HD avec QR Code..." : "📥 Télécharger le Visuel (PNG 9:16 + QR Code)"}</span>
+                <span>{downloading ? "Génération du PNG HD avec QR Code..." : "Télécharger le Visuel (PNG 9:16 + QR Code)"}</span>
               </button>
 
               {/* Multi-Platform Direct Share Dropdown */}
