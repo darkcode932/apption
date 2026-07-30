@@ -7,7 +7,6 @@ import {
   HiArrowDownTray,
   HiShare,
   HiCheck,
-  HiQrCode,
   HiPhoto,
   HiArrowPath,
   HiLink,
@@ -50,19 +49,19 @@ export default function PetBotViralStudioModal({
   // State
   const [customQuote, setCustomQuote] = useState(petitionTitle);
   const [selectedBg, setSelectedBg] = useState(AI_PRESETS[0].url);
-  const [customBgInput, setCustomBgInput] = useState("");
   const [activeTheme, setActiveTheme] = useState<"emerald" | "gold" | "cyber" | "minimal">("emerald");
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareDropdown, setShowShareDropdown] = useState(false);
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Target URL & Real Unique Scannable QR Code URL
+  const targetUrl = typeof window !== "undefined" ? window.location.href : "https://apption.org";
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
 
   // Sync title when modal opens
   useEffect(() => {
     if (isOpen) {
       setCustomQuote(petitionTitle);
-      // Auto pick background based on category
       const catLower = (category || "").toLowerCase();
       if (catLower.includes("ville") || catLower.includes("transport")) setSelectedBg(AI_PRESETS[1].url);
       else if (catLower.includes("educ") || catLower.includes("jeun")) setSelectedBg(AI_PRESETS[2].url);
@@ -101,7 +100,7 @@ export default function PetBotViralStudioModal({
     }
   };
 
-  // REAL PHYSICAL PNG 9:16 DOWNLOAD ENGINE (HTML5 CANVAS 1080x1920)
+  // REAL PHYSICAL PNG 9:16 DOWNLOAD ENGINE (HTML5 CANVAS 1080x1920) WITH SCANNABLE QR CODE
   const handleRealDownload = async () => {
     setDownloading(true);
 
@@ -135,8 +134,8 @@ export default function PetBotViralStudioModal({
 
       // 2. Draw Dark Gradient Overlay
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, "rgba(11, 11, 15, 0.7)");
-      gradient.addColorStop(0.5, "rgba(11, 11, 15, 0.85)");
+      gradient.addColorStop(0, "rgba(11, 11, 15, 0.75)");
+      gradient.addColorStop(0.5, "rgba(11, 11, 15, 0.88)");
       gradient.addColorStop(1, "rgba(11, 11, 15, 0.98)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
@@ -200,18 +199,38 @@ export default function PetBotViralStudioModal({
       ctx.roundRect(120, boxY + 120, progressWidth, 32, 16);
       ctx.fill();
 
-      // 6. Draw Footer Info & Call To Action
+      // 6. Draw REAL UNIQUE SCANNABLE QR CODE
+      const qrImg = new Image();
+      qrImg.crossOrigin = "anonymous";
+      
+      await new Promise<void>((resolve) => {
+        qrImg.onload = () => {
+          // Draw white card background for QR Code
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.roundRect(width - 320, height - 340, 240, 240, 24);
+          ctx.fill();
+          
+          // Draw QR Code Matrix
+          ctx.drawImage(qrImg, width - 300, height - 320, 200, 200);
+          resolve();
+        };
+        qrImg.onerror = () => resolve(); // fallback
+        qrImg.src = qrCodeUrl;
+      });
+
+      // Draw Footer Info
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 38px sans-serif";
-      ctx.fillText("Scannez pour signer la pétition", 80, height - 200);
+      ctx.fillText("Scannez pour signer la pétition", 80, height - 220);
 
-      ctx.fillStyle = "#737373";
+      ctx.fillStyle = "#a3a3a3";
       ctx.font = "30px sans-serif";
-      ctx.fillText(`Initiateur: ${creatorName} • ${city}`, 80, height - 140);
+      ctx.fillText(`Initiateur: ${creatorName} • ${city}`, 80, height - 160);
 
       ctx.fillStyle = "#10b981";
-      ctx.font = "bold 36px sans-serif";
-      ctx.fillText("AGISSONS ENSEMBLE →", width - 460, height - 160);
+      ctx.font = "bold 34px sans-serif";
+      ctx.fillText("Lien officiel: Apption.org", 80, height - 100);
 
       // 7. REAL PHYSICAL BROWSER DOWNLOAD
       const dataUrl = canvas.toDataURL("image/png");
@@ -234,14 +253,13 @@ export default function PetBotViralStudioModal({
   const handlePlatformShare = (platform: "whatsapp" | "twitter" | "facebook" | "instagram" | "native") => {
     if (typeof window === "undefined") return;
 
-    const pageUrl = window.location.href;
-    const shareText = `🚀 Soutenez la cause "${customQuote}" sur Apption ! Signez la pétition ici : ${pageUrl}`;
+    const shareText = `🚀 Soutenez la cause "${customQuote}" sur Apption ! Signez la pétition ici : ${targetUrl}`;
 
     if (platform === "native" && navigator.share) {
       navigator.share({
         title: customQuote,
         text: shareText,
-        url: pageUrl,
+        url: targetUrl,
       }).catch(console.error);
       return;
     }
@@ -249,12 +267,11 @@ export default function PetBotViralStudioModal({
     let url = "";
     if (platform === "whatsapp") url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     if (platform === "twitter") url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-    if (platform === "facebook") url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+    if (platform === "facebook") url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(targetUrl)}`;
 
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     } else {
-      // Fallback copy
       navigator.clipboard.writeText(shareText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -287,11 +304,11 @@ export default function PetBotViralStudioModal({
             <h2 className="text-xl font-extrabold text-white font-display flex items-center space-x-2">
               <span>PetBot Viral Studio Pro</span>
               <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-mono border border-green-500/20">
-                Studio IA HD
+                QR Code Unique 100% Scannable
               </span>
             </h2>
             <p className="text-xs text-neutral-400 font-light">
-              Générez un visuel de Story 9:16 personnalisé et téléchargez-le réellement en PNG HD.
+              Visuel de Story 9:16 avec QR Code unique redirigeant directement vers votre pétition.
             </p>
           </div>
         </div>
@@ -302,13 +319,7 @@ export default function PetBotViralStudioModal({
           {/* Left Column: 9:16 Live Preview */}
           <div className="lg:col-span-5 flex flex-col items-center space-y-3">
             <div
-              className={`w-[260px] h-[460px] rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden border border-white/10 transition-all duration-500 bg-cover bg-center ${
-                activeTheme === "emerald"
-                  ? "text-white"
-                  : activeTheme === "gold"
-                  ? "text-white"
-                  : "text-white"
-              }`}
+              className="w-[260px] h-[460px] rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden border border-white/10 transition-all duration-500 bg-cover bg-center text-white"
               style={{ backgroundImage: `url(${selectedBg})` }}
             >
               {/* Dark Gradient Overlay for readability */}
@@ -342,15 +353,20 @@ export default function PetBotViralStudioModal({
                 </div>
               </div>
 
-              {/* Story Footer QR & CTA */}
+              {/* Story Footer Real Unique Scannable QR Code */}
               <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center text-neutral-950 shadow-md">
-                    <HiQrCode className="text-xl" />
+                <div className="flex items-center space-x-2.5">
+                  {/* REAL UNIQUE SCANNABLE QR CODE IMAGE */}
+                  <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg border border-white/20">
+                    <img
+                      src={qrCodeUrl}
+                      alt="QR Code de la pétition"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-white leading-tight">Scannez pour signer</span>
-                    <span className="text-[8px] text-neutral-400">Par {creatorName}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[9px] font-extrabold text-white leading-tight">Scannez pour signer</span>
+                    <span className="text-[8px] text-neutral-400 truncate max-w-[100px]">{creatorName}</span>
                   </div>
                 </div>
                 <span className="text-[10px] font-extrabold text-green-400 uppercase tracking-wider">
@@ -360,7 +376,9 @@ export default function PetBotViralStudioModal({
 
             </div>
 
-            <span className="text-[11px] text-neutral-400 font-mono">Aperçu Réel 9:16 (1080 x 1920 px)</span>
+            <span className="text-[11px] text-green-400 font-mono flex items-center space-x-1">
+              <span>✅ QR Code Scannable Unique Généré</span>
+            </span>
           </div>
 
           {/* Right Column: Customization Controls & Actions */}
@@ -423,7 +441,7 @@ export default function PetBotViralStudioModal({
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-green-500/20 flex items-center justify-center space-x-2 transition-all cursor-pointer"
               >
                 <HiArrowDownTray className="text-base" />
-                <span>{downloading ? "Génération du visuel PNG HD..." : "📥 Télécharger le Visuel (PNG 9:16)"}</span>
+                <span>{downloading ? "Génération du PNG HD avec QR Code..." : "📥 Télécharger le Visuel (PNG 9:16 + QR Code)"}</span>
               </button>
 
               {/* Multi-Platform Direct Share Dropdown */}
