@@ -16,8 +16,6 @@ import {
   HiHeart,
   HiChatBubbleLeftRight,
 } from "react-icons/hi2";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
 
 // ─── Timeline Steps ────────────────────────────────────────────────────────────
 const steps = [
@@ -147,8 +145,6 @@ export default function CommentCaMarchePage() {
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] flex flex-col">
-      <Navbar />
-
       <main className="flex-1 space-y-24 overflow-hidden">
 
         {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
@@ -359,8 +355,6 @@ export default function CommentCaMarchePage() {
         </section>
 
       </main>
-
-      <Footer />
     </div>
   );
 }

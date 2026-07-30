@@ -9,8 +9,6 @@ import {
   HiChatBubbleLeftRight,
   HiXMark,
 } from "react-icons/hi2";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface FAQItem {
@@ -298,8 +296,6 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] flex flex-col">
-      <Navbar />
-
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-14 space-y-10">
 
         {/* ── Hero Header ── */}
@@ -436,8 +432,6 @@ export default function FAQPage() {
         </div>
 
       </main>
-
-      <Footer />
     </div>
   );
 }
