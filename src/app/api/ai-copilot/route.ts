@@ -10,8 +10,8 @@ function generateLocalCopilotKit(title: string, description: string, scale: stri
       ? `Urgent Action: ${cleanTitle}${scaleStr}`
       : `Action Urgente : ${cleanTitle}${scaleStr}`,
     optimizedDescription: isEn
-      ? `**The Problem:**\n${description}\n\n**Why We Need Action:**\nCitizens and local communities deserve immediate attention and concrete changes.\n\n**Our Demands:**\n1. Immediate intervention by responsible authorities.\n2. Transparent progress reports.\n3. Dedicated budget and resources.`
-      : `**Le Constat :**\n${description}\n\n**Pourquoi l'Action est Indispensable :**\nLes citoyens et les communautés méritent une attention immédiate et des changements concrets.\n\n**Nos Exigences :**\n1. Intervention immédiate des autorités responsables.\n2. Rapports de suivi transparents.\n3. Allocation de moyens et ressources dédiés.`,
+      ? `The Problem:\n${description}\n\nWhy We Need Action:\nCitizens and local communities deserve immediate attention and concrete changes.\n\nOur Demands:\n1. Immediate intervention by responsible authorities.\n2. Transparent progress reports.\n3. Dedicated budget and resources.`
+      : `Le Constat :\n${description}\n\nPourquoi l'Action est Indispensable :\nLes citoyens et les communautés méritent une attention immédiate et des changements concrets.\n\nNos Exigences :\n1. Intervention immédiate des autorités responsables.\n2. Rapports de suivi transparents.\n3. Allocation de moyens et ressources dédiés.`,
     suggestedTargets: isEn
       ? ["Competent Municipal/National Authorities", "Relevant Department Directors"]
       : ["Autorités Municipales/Nationales Compétentes", "Direction des Services Concernés"],
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       });
 
       const prompt = isEn
-        ? `Optimize this petition project:
+        ? `Optimize this petition project in plain text without any markdown asterisks (no **bold**):
 Category: ${category || "General"}
 Scale: ${scale || "National"}
 Proposed Title: "${title}"
@@ -70,7 +70,7 @@ Output JSON:
   "suggestedTargets": ["string"],
   "socialKit": { "twitter": "string", "facebook": "string", "whatsapp": "string" }
 }`
-        : `Optimise ce projet de pétition :
+        : `Optimise ce projet de pétition en texte brut sans aucun astérisque markdown (pas de **gras**) :
 Catégorie: ${category || "Général"}
 Échelle: ${scale || "National"}
 Titre proposé: "${title}"
@@ -87,6 +87,10 @@ Format JSON attendu:
       const result = await model.generateContent(prompt);
       const responseText = result.response.text().trim();
       const parsed = JSON.parse(responseText);
+
+      // Clean leftover markdown asterisks if any
+      if (parsed.optimizedTitle) parsed.optimizedTitle = parsed.optimizedTitle.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
+      if (parsed.optimizedDescription) parsed.optimizedDescription = parsed.optimizedDescription.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
 
       return NextResponse.json(parsed);
     } catch (geminiError) {

@@ -100,7 +100,9 @@ export default function HomePage() {
     });
   };
 
-  const filteredPetitions = getFilteredPetitions();
+  const targetedList = getFilteredPetitions();
+  const filteredPetitions = targetedList.length > 0 ? targetedList : petitions;
+
   const highlightPetition =
     filteredPetitions.find((p) => p.isFeatured) ||
     (filteredPetitions.length > 0 ? filteredPetitions[0] : null);

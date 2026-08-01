@@ -147,13 +147,23 @@ export default function LaunchPetitionPage() {
     setError(null);
 
     try {
+      const creatorName =
+        user.username && user.username.trim() !== ""
+          ? user.username
+          : `${user.firstname || ""} ${user.lastname || ""}`.trim() ||
+            user.email.split("@")[0] ||
+            "Citoyen Apption";
+
+      const cleanTitle = title.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
+      const cleanDescription = description.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
+
       const newPetition = await createPetitionUseCase.execute(
-        title,
-        description,
+        cleanTitle,
+        cleanDescription,
         scale,
         category,
         user.id,
-        user.username || `${user.firstname} ${user.lastname}`,
+        creatorName,
         imageFile,
         user.latitude || 0,
         user.longitude || 0,
@@ -486,7 +496,10 @@ export default function LaunchPetitionPage() {
                   {/* Optimized Title */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{locale === "fr" ? "Titre Suggéré" : "Suggested Title"}</h4>
-                    <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 font-semibold text-white">
+                    <div
+                      className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 text-sm text-white leading-snug"
+                      style={{ fontFamily: "'Times New Roman', Times, serif" }}
+                    >
                       {aiResult.optimizedTitle}
                     </div>
                   </div>
@@ -494,7 +507,10 @@ export default function LaunchPetitionPage() {
                   {/* Optimized Description */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1">{locale === "fr" ? "Description Suggérée" : "Suggested Description"}</h4>
-                    <div className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 leading-relaxed text-neutral-300 font-light whitespace-pre-wrap">
+                    <div
+                      className="bg-neutral-950/30 p-4 rounded-2xl border border-white/5 leading-relaxed text-neutral-200 whitespace-pre-wrap text-sm"
+                      style={{ fontFamily: "'Times New Roman', Times, serif" }}
+                    >
                       {aiResult.optimizedDescription}
                     </div>
                   </div>
