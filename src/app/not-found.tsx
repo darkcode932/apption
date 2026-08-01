@@ -4,16 +4,12 @@ import React from "react";
 import Link from "next/link";
 import { HiHome, HiMegaphone, HiSparkles } from "react-icons/hi2";
 import { useLanguage } from "../i18n/LanguageContext";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
 
 export default function NotFound() {
   const { locale } = useLanguage();
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-950 text-white">
-      <Navbar />
-
+    <div className="min-h-screen flex flex-col bg-neutral-950 text-white justify-center items-center">
       <main className="flex-grow flex flex-col justify-center items-center w-full relative overflow-hidden p-6 py-16 select-none">
         
         {/* Soft Ambient Background Glows */}
@@ -79,8 +75,6 @@ export default function NotFound() {
         </div>
 
       </main>
-
-      <Footer />
     </div>
   );
 }
