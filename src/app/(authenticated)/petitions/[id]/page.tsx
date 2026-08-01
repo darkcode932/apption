@@ -146,8 +146,9 @@ export default function PetitionDetailsPage() {
   const isOwner = user && petition && user.id === petition.createdBy;
   const isVictory = petition?.status === "victory";
 
-  const nextGoal = Math.max(100, Math.ceil((petition?.signaturesCount || 1) / 100) * 100);
-  const progressPercent = Math.min(100, Math.round(((petition?.signaturesCount || 1) / nextGoal) * 100));
+  const signaturesCount = petition?.signaturesCount || 1;
+  const nextGoal = petition?.targetGoal || Math.max(100, Math.ceil(signaturesCount / 100) * 100);
+  const progressPercent = Math.min(100, Math.round((signaturesCount / nextGoal) * 100));
 
   const handleSignConfirm = async (e: React.FormEvent) => {
     e.preventDefault();

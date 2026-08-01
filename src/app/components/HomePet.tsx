@@ -36,7 +36,7 @@ export default function HomePet({ petition }: HomePetProps) {
   const views = petition?.views || 1420;
 
   // Signature Progress Calculation
-  const nextGoal = Math.max(100, Math.ceil(signaturesCount / 100) * 100);
+  const nextGoal = petition?.targetGoal || Math.max(100, Math.ceil(signaturesCount / 100) * 100);
   const progressPercent = Math.min(100, Math.round((signaturesCount / nextGoal) * 100));
 
   const href = id ? `/petitions/${id}` : "/petitions";

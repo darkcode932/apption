@@ -72,6 +72,10 @@ export class FirebasePetitionRepository implements PetitionRepository {
       country: data.country || "",
       city: data.city || "",
       isFeatured: !!data.isFeatured,
+      targetGoal: data.targetGoal || 1000,
+      durationDays: data.durationDays !== undefined ? data.durationDays : null,
+      targetDecisionMaker: data.targetDecisionMaker || "",
+      impactScore: data.impactScore || 85,
     };
   }
 
@@ -86,7 +90,11 @@ export class FirebasePetitionRepository implements PetitionRepository {
     latitude?: number,
     longitude?: number,
     country?: string,
-    city?: string
+    city?: string,
+    targetGoal?: number,
+    durationDays?: number | null,
+    targetDecisionMaker?: string,
+    impactScore?: number
   ): Promise<Petition> {
     let imageUrl = "/assets/images/libération.jpg"; // default fallback
 
@@ -130,6 +138,10 @@ export class FirebasePetitionRepository implements PetitionRepository {
       country: country || "",
       city: city || "",
       isFeatured: false,
+      targetGoal: targetGoal || 1000,
+      durationDays: durationDays !== undefined ? durationDays : null,
+      targetDecisionMaker: targetDecisionMaker || "",
+      impactScore: impactScore || 85,
     };
 
     const docRef = await addDoc(collection(db, "petition"), petitionData);

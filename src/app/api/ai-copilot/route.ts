@@ -4,6 +4,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 function generateLocalCopilotKit(title: string, description: string, scale: string, category: string, isEn: boolean) {
   const cleanTitle = title.trim();
   const scaleStr = scale ? ` (${scale})` : "";
+  const isVille = scale === "Ville";
+  const isNational = scale === "National";
+
+  const recommendedGoal = isVille ? 1500 : isNational ? 5000 : 10000;
+  const recommendedDurationDays = isVille ? 14 : isNational ? 30 : 60;
+  const targetDecisionMaker = isVille
+    ? (isEn ? "Municipal Authorities & Mayor" : "Mairie & Autorités Locales")
+    : (isEn ? "Ministry of Environment & Competent Authorities" : "Ministère Concerné & Autorités Nationales");
 
   return {
     optimizedTitle: isEn
@@ -15,6 +23,10 @@ function generateLocalCopilotKit(title: string, description: string, scale: stri
     suggestedTargets: isEn
       ? ["Competent Municipal/National Authorities", "Relevant Department Directors"]
       : ["Autorités Municipales/Nationales Compétentes", "Direction des Services Concernés"],
+    recommendedGoal,
+    recommendedDurationDays,
+    targetDecisionMaker,
+    impactScore: 88,
     socialKit: {
       twitter: isEn
         ? `I just supported: "${cleanTitle}". Join the movement on Apption! #CitizenImpact #ActNow`
@@ -68,6 +80,10 @@ Output JSON:
   "optimizedTitle": "string",
   "optimizedDescription": "string",
   "suggestedTargets": ["string"],
+  "recommendedGoal": 1500,
+  "recommendedDurationDays": 14,
+  "targetDecisionMaker": "string",
+  "impactScore": 88,
   "socialKit": { "twitter": "string", "facebook": "string", "whatsapp": "string" }
 }`
         : `Optimise ce projet de pétition en texte brut sans aucun astérisque markdown (pas de **gras**) :
@@ -81,6 +97,10 @@ Format JSON attendu:
   "optimizedTitle": "string",
   "optimizedDescription": "string",
   "suggestedTargets": ["string"],
+  "recommendedGoal": 1500,
+  "recommendedDurationDays": 14,
+  "targetDecisionMaker": "string",
+  "impactScore": 88,
   "socialKit": { "twitter": "string", "facebook": "string", "whatsapp": "string" }
 }`;
 
@@ -91,6 +111,10 @@ Format JSON attendu:
       // Clean leftover markdown asterisks if any
       if (parsed.optimizedTitle) parsed.optimizedTitle = parsed.optimizedTitle.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
       if (parsed.optimizedDescription) parsed.optimizedDescription = parsed.optimizedDescription.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
+
+      if (!parsed.recommendedGoal) parsed.recommendedGoal = scale === "Ville" ? 1500 : 5000;
+      if (!parsed.recommendedDurationDays) parsed.recommendedDurationDays = 14;
+      if (!parsed.impactScore) parsed.impactScore = 85;
 
       return NextResponse.json(parsed);
     } catch (geminiError) {

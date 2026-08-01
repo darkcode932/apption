@@ -15,6 +15,10 @@ interface AICopilotResult {
   optimizedTitle: string;
   optimizedDescription: string;
   suggestedTargets: string[];
+  recommendedGoal?: number;
+  recommendedDurationDays?: number;
+  targetDecisionMaker?: string;
+  impactScore?: number;
   socialKit: {
     twitter: string;
     facebook: string;
@@ -59,6 +63,11 @@ export default function LaunchPetitionPage() {
   const [category, setCategory] = useState("Environnement");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [targetGoal, setTargetGoal] = useState<number>(1000);
+  const [durationDays, setDurationDays] = useState<number | null>(30);
+  const [targetDecisionMaker, setTargetDecisionMaker] = useState("");
+  const [impactScore, setImpactScore] = useState<number | null>(null);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -127,6 +136,10 @@ export default function LaunchPetitionPage() {
     if (aiResult) {
       setTitle(aiResult.optimizedTitle);
       setDescription(aiResult.optimizedDescription);
+      if (aiResult.recommendedGoal) setTargetGoal(aiResult.recommendedGoal);
+      if (aiResult.recommendedDurationDays) setDurationDays(aiResult.recommendedDurationDays);
+      if (aiResult.targetDecisionMaker) setTargetDecisionMaker(aiResult.targetDecisionMaker);
+      if (aiResult.impactScore) setImpactScore(aiResult.impactScore);
       setShowAiModal(false);
     }
   };
@@ -168,7 +181,11 @@ export default function LaunchPetitionPage() {
         user.latitude || 0,
         user.longitude || 0,
         user.country || "",
-        user.city || ""
+        user.city || "",
+        targetGoal || 1000,
+        durationDays,
+        targetDecisionMaker,
+        impactScore || 85
       );
       router.push(`/petitions/${newPetition.id}`);
     } catch (err: any) {
@@ -347,7 +364,7 @@ export default function LaunchPetitionPage() {
                   {t("launch.form_desc")}
                 </label>
                 <textarea
-                  rows={5}
+                  rows={4}
                   name="description"
                   id="description"
                   value={description}
@@ -358,6 +375,113 @@ export default function LaunchPetitionPage() {
                   disabled={loading}
                 />
               </div>
+
+              {/* 🎯 Objectif de signatures & Durée */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                {/* Objectif de signatures (Obligatoire) */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-neutral-350 pl-1">
+                    {locale === "fr" ? "Objectif de signatures *" : "Signatures Goal *"}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min={100}
+                      max={1000000}
+                      value={targetGoal}
+                      onChange={(e) => setTargetGoal(Math.max(100, parseInt(e.target.value) || 100))}
+                      className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-neutral-950/30 text-white text-sm font-bold focus:border-green-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[500, 1000, 2500, 5000, 10000].map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => setTargetGoal(goal)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${
+                          targetGoal === goal
+                            ? "bg-green-500 text-neutral-950 border-green-500"
+                            : "bg-neutral-900/50 text-neutral-400 border-white/5 hover:border-white/20"
+                        }`}
+                      >
+                        {goal.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Durée de la campagne (Optionnelle) */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-neutral-350 pl-1">
+                    {locale === "fr" ? "Durée de campagne (Optionnel)" : "Campaign Duration (Optional)"}
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: "7j", days: 7 },
+                      { label: "14j", days: 14 },
+                      { label: "30j", days: 30 },
+                      { label: "90j", days: 90 },
+                      { label: locale === "fr" ? "Illimité" : "Unlimited", days: null },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => setDurationDays(item.days)}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex-1 text-center ${
+                          durationDays === item.days
+                            ? "bg-green-500 text-neutral-950 border-green-500"
+                            : "bg-neutral-900/50 text-neutral-400 border-white/5 hover:border-white/20"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 🎯 Décideur Institutionnel Cible (Optionnel) */}
+              <div className="relative rounded-2xl border border-white/5 px-4 py-2.5 bg-neutral-950/20 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500/10 transition-all">
+                <label
+                  htmlFor="targetDecisionMaker"
+                  className="absolute -top-2 left-3 -mt-px inline-block bg-[#16161c] px-1.5 text-[10px] font-semibold text-green-400 uppercase tracking-wider"
+                >
+                  {locale === "fr" ? "Décideur Institutionnel Cible" : "Target Institutional Decision Maker"}
+                </label>
+                <input
+                  type="text"
+                  name="targetDecisionMaker"
+                  id="targetDecisionMaker"
+                  value={targetDecisionMaker}
+                  onChange={(e) => setTargetDecisionMaker(e.target.value)}
+                  className="block w-full border-0 p-0 text-white placeholder-neutral-500 bg-transparent focus:ring-0 sm:text-sm outline-none font-medium"
+                  placeholder={locale === "fr" ? "Ex: Mairie de Douala, Ministère des Transports..." : "Ex: Douala City Council, Ministry of Transport..."}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* 🤖 PetBot AI Impact Score Card Indicator */}
+              {impactScore && (
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 font-extrabold text-sm">
+                      {impactScore}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">
+                        {locale === "fr" ? "Score d'Impact Prédictif PetBot AI" : "PetBot AI Impact Score Predictor"}
+                      </h4>
+                      <p className="text-[11px] text-neutral-400 font-light">
+                        {locale === "fr" ? "Excellente viabilité de campagne pour mobiliser votre cible." : "High campaign viability to engage your target decision maker."}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider">
+                    {locale === "fr" ? "Optimal" : "Optimal"}
+                  </span>
+                </div>
+              )}
 
               {/* File upload */}
               <div className="space-y-1.5">

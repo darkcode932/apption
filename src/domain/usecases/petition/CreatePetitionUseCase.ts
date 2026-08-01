@@ -15,7 +15,11 @@ export class CreatePetitionUseCase {
     latitude?: number,
     longitude?: number,
     country?: string,
-    city?: string
+    city?: string,
+    targetGoal?: number,
+    durationDays?: number | null,
+    targetDecisionMaker?: string,
+    impactScore?: number
   ): Promise<Petition> {
     return this.petitionRepository.createPetition(
       title,
@@ -28,7 +32,11 @@ export class CreatePetitionUseCase {
       latitude,
       longitude,
       country,
-      city
+      city,
+      targetGoal,
+      durationDays,
+      targetDecisionMaker,
+      impactScore
     );
   }
 }

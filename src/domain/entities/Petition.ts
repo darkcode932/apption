@@ -20,4 +20,8 @@ export interface Petition {
   city?: string;
   targetAudience?: string;
   isFeatured?: boolean;
+  targetGoal?: number;
+  durationDays?: number | null;
+  targetDecisionMaker?: string;
+  impactScore?: number;
 }

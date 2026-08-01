@@ -17,7 +17,11 @@ export interface PetitionRepository {
     latitude?: number,
     longitude?: number,
     country?: string,
-    city?: string
+    city?: string,
+    targetGoal?: number,
+    durationDays?: number | null,
+    targetDecisionMaker?: string,
+    impactScore?: number
   ): Promise<Petition>;
   getPetitionById(id: string): Promise<Petition | null>;
   getAllPetitions(category?: string, scale?: string): Promise<Petition[]>;
