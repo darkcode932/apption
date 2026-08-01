@@ -10,6 +10,7 @@ import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import AuthError from "../../components/AuthError";
 import { useT } from "../../../i18n/LanguageContext";
+import { parseAuthError, AuthErrorInfo } from "../../../utils/authErrorHelper";
 import {
   signInUseCase,
   signInWithGoogleUseCase,
@@ -22,7 +23,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordShow, setPasswordShow] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<AuthErrorInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setErrorInfo(null);
     setLoading(true);
 
     try {
@@ -56,39 +57,35 @@ export default function LoginPage() {
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Identifiants invalides ou erreur de connexion.");
+      setErrorInfo(parseAuthError(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setError(null);
+    setErrorInfo(null);
     setSocialLoading("google");
     try {
       await signInWithGoogleUseCase.execute();
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(err?.message || "Erreur de connexion avec Google.");
-      }
+      setErrorInfo(parseAuthError(err, "google"));
     } finally {
       setSocialLoading(null);
     }
   };
 
   const handleFacebookSignIn = async () => {
-    setError(null);
+    setErrorInfo(null);
     setSocialLoading("facebook");
     try {
       await signInWithFacebookUseCase.execute();
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(err?.message || "Erreur de connexion avec Facebook.");
-      }
+      setErrorInfo(parseAuthError(err, "facebook"));
     } finally {
       setSocialLoading(null);
     }
@@ -116,7 +113,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md space-y-6">
-            {error && <AuthError error={error} />}
+            {errorInfo && <AuthError error={errorInfo} onClose={() => setErrorInfo(null)} />}
 
             {/* Social Login Buttons */}
             <div className="flex flex-col space-y-3">

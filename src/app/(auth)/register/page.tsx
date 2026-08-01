@@ -11,6 +11,7 @@ import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import AuthError from "../../components/AuthError";
 import { useLanguage, useT } from "../../../i18n/LanguageContext";
+import { parseAuthError, AuthErrorInfo } from "../../../utils/authErrorHelper";
 import {
   signUpUseCase,
   signInWithGoogleUseCase,
@@ -32,16 +33,19 @@ export default function RegisterPage() {
   const [passwordShow, setPasswordShow] = useState(false);
   const [cpasswordShow, setCPasswordShow] = useState(false);
   
-  const [error, setError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<AuthErrorInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setErrorInfo(null);
 
     if (password !== confirmPassword) {
-      setError(locale === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match.");
+      setErrorInfo({
+        title: locale === "fr" ? "Erreur de saisie" : "Validation error",
+        description: locale === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match.",
+      });
       return;
     }
 
@@ -51,39 +55,35 @@ export default function RegisterPage() {
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Une erreur est survenue lors de l'inscription.");
+      setErrorInfo(parseAuthError(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setError(null);
+    setErrorInfo(null);
     setSocialLoading("google");
     try {
       await signInWithGoogleUseCase.execute();
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(err?.message || "Erreur de connexion avec Google.");
-      }
+      setErrorInfo(parseAuthError(err, "google"));
     } finally {
       setSocialLoading(null);
     }
   };
 
   const handleFacebookSignIn = async () => {
-    setError(null);
+    setErrorInfo(null);
     setSocialLoading("facebook");
     try {
       await signInWithFacebookUseCase.execute();
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(err?.message || "Erreur de connexion avec Facebook.");
-      }
+      setErrorInfo(parseAuthError(err, "facebook"));
     } finally {
       setSocialLoading(null);
     }
@@ -107,7 +107,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {error && <div className="mb-5"><AuthError error={error} /></div>}
+        {errorInfo && <div className="mb-5"><AuthError error={errorInfo} onClose={() => setErrorInfo(null)} /></div>}
 
         {/* Social Login Buttons */}
         <div className="flex flex-col space-y-3 mb-6">
