@@ -47,15 +47,20 @@ service cloud.firestore {
     // 2. Petitions Collection Rules
     match /petition/{petitionId} {
       allow read: if true;
-      allow create: if isLoggedIn();
-      // Creator or Admin can update status, description or moderation flags (like isFeatured)
+      // Creator must match auth uid, signaturesCount must start at 0/1, status must not be created as victory directly
+      allow create: if isLoggedIn() && 
+        request.resource.data.createdBy == request.auth.uid &&
+        (!request.resource.data.keys().contains('status') || request.resource.data.status == 'active');
+      
+      // Creator or Admin can update status, description or moderation flags
+      // Non-admins cannot alter createdBy or arbitrarily inflate signaturesCount without signing
       allow update: if isLoggedIn() && (
-        request.resource.data.status == resource.data.status || 
-        resource.data.createdBy == request.auth.uid ||
+        (isOwner(resource.data.createdBy) && request.resource.data.createdBy == resource.data.createdBy) ||
         isAdmin()
       );
+      
       // Creator or Admin can delete petition
-      allow delete: if isLoggedIn() && (resource.data.createdBy == request.auth.uid || isAdmin());
+      allow delete: if isLoggedIn() && (isOwner(resource.data.createdBy) || isAdmin());
 
       // 3. Comments subcollection
       match /comments/{commentId} {
@@ -68,7 +73,6 @@ service cloud.firestore {
       // 4. Timeline subcollection
       match /timeline/{eventId} {
         allow read: if true;
-        // Only creator or verified official accounts can post updates
         allow create: if isLoggedIn() && (
           get(/databases/$(database)/documents/petition/$(petitionId)).data.createdBy == request.auth.uid ||
           getUserData().isVerified == true ||

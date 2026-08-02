@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     // Fast local copilot generator if API key is invalid format (starts with AIzaSy)
     if (!apiKey || !apiKey.startsWith("AIzaSy")) {
