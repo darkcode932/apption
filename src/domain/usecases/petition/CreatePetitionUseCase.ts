@@ -1,5 +1,6 @@
 import { PetitionRepository } from "../../repositories/PetitionRepository";
 import { Petition } from "../../entities/Petition";
+import { sanitizeText } from "../../../utils/sanitize";
 
 export class CreatePetitionUseCase {
   constructor(private petitionRepository: PetitionRepository) {}
@@ -22,20 +23,20 @@ export class CreatePetitionUseCase {
     impactScore?: number
   ): Promise<Petition> {
     return this.petitionRepository.createPetition(
-      title,
-      description,
-      scale,
-      category,
+      sanitizeText(title),
+      sanitizeText(description),
+      sanitizeText(scale),
+      sanitizeText(category),
       creatorId,
-      creatorName,
+      sanitizeText(creatorName),
       imageFile,
       latitude,
       longitude,
-      country,
-      city,
+      country ? sanitizeText(country) : undefined,
+      city ? sanitizeText(city) : undefined,
       targetGoal,
       durationDays,
-      targetDecisionMaker,
+      targetDecisionMaker ? sanitizeText(targetDecisionMaker) : undefined,
       impactScore
     );
   }
