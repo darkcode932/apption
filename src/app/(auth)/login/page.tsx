@@ -17,6 +17,8 @@ import {
   signInWithFacebookUseCase,
 } from "../../../infrastructure/ServiceLocator";
 
+import { sanitizeText } from "../../../utils/sanitize";
+
 export default function LoginPage() {
   const router = useRouter();
   const t = useT();
@@ -27,6 +29,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // Security: Brute-Force rate limiter state
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("apption_remembered_email");
@@ -43,13 +49,29 @@ export default function LoginPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorInfo(null);
+
+    // Rate limiting check
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      const remainingSecs = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      setErrorInfo({
+        title: "Tentatives trop nombreuses",
+        description: `Compte temporairement protégé. Veuillez réespacer vos tentatives dans ${remainingSecs}s.`,
+      });
+      return;
+    }
+
+    const cleanEmail = sanitizeText(email).toLowerCase();
+
     setLoading(true);
 
     try {
-      await signInUseCase.execute(email, password);
+      await signInUseCase.execute(cleanEmail, password);
       
+      setFailedAttempts(0);
+      setLockoutUntil(null);
+
       if (rememberMe) {
-        localStorage.setItem("apption_remembered_email", email);
+        localStorage.setItem("apption_remembered_email", cleanEmail);
       } else {
         localStorage.removeItem("apption_remembered_email");
       }
@@ -57,7 +79,18 @@ export default function LoginPage() {
       router.push("/home");
     } catch (err: any) {
       console.error(err);
-      setErrorInfo(parseAuthError(err));
+      const newFailCount = failedAttempts + 1;
+      setFailedAttempts(newFailCount);
+
+      if (newFailCount >= 5) {
+        setLockoutUntil(Date.now() + 60000); // 60s lockout
+        setErrorInfo({
+          title: "Sécurité de Connexion",
+          description: "Trop d'échecs de connexion consécutifs. Veuillez patienter 60 secondes.",
+        });
+      } else {
+        setErrorInfo(parseAuthError(err));
+      }
     } finally {
       setLoading(false);
     }

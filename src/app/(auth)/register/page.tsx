@@ -18,6 +18,8 @@ import {
   signInWithFacebookUseCase,
 } from "../../../infrastructure/ServiceLocator";
 
+import { sanitizeText } from "../../../utils/sanitize";
+
 export default function RegisterPage() {
   const router = useRouter();
   const t = useT();
@@ -41,6 +43,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorInfo(null);
 
+    // Password strength & confirmation validation
     if (password !== confirmPassword) {
       setErrorInfo({
         title: locale === "fr" ? "Erreur de saisie" : "Validation error",
@@ -49,9 +52,22 @@ export default function RegisterPage() {
       return;
     }
 
+    if (password.length < 8) {
+      setErrorInfo({
+        title: locale === "fr" ? "Mot de passe trop court" : "Weak password",
+        description: locale === "fr" ? "Le mot de passe doit contenir au moins 8 caractères." : "Password must be at least 8 characters.",
+      });
+      return;
+    }
+
+    const cleanFirstname = sanitizeText(firstname);
+    const cleanLastname = sanitizeText(lastname);
+    const cleanUsername = sanitizeText(username);
+    const cleanEmail = sanitizeText(email).toLowerCase();
+
     setLoading(true);
     try {
-      await signUpUseCase.execute(email, password, firstname, lastname, username);
+      await signUpUseCase.execute(cleanEmail, password, cleanFirstname, cleanLastname, cleanUsername);
       router.push("/home");
     } catch (err: any) {
       console.error(err);
