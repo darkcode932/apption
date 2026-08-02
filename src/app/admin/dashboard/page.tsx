@@ -16,12 +16,24 @@ import {
   HiCheckCircle,
 } from "react-icons/hi2";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { getPetitionsUseCase, getAllUsersUseCase } from "../../../infrastructure/ServiceLocator";
 import { Petition } from "../../../domain/entities/Petition";
 import { User } from "../../../domain/entities/User";
 import { useLanguage, useT } from "../../../i18n/LanguageContext";
-import AdminGisMap from "../components/AdminGisMap";
 import AdminAiWatchtower from "../components/AdminAiWatchtower";
+
+// Dynamically import AdminGisMap to prevent SSR Leaflet ChunkLoaderError
+const AdminGisMap = dynamic(() => import("../components/AdminGisMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-80 bg-neutral-900/60 rounded-3xl border border-white/5 flex items-center justify-center animate-pulse">
+      <span className="text-xs text-neutral-400 font-semibold font-mono">
+        🗺️ Chargement du Système GIS Administratif...
+      </span>
+    </div>
+  ),
+});
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage();
