@@ -8,32 +8,72 @@ import ButtonClick from "../../components/ButtonClick";
 import { Input } from "../../components/Input";
 import AuthError from "../../components/AuthError";
 import { signInUseCase, signOutUseCase } from "../../../infrastructure/ServiceLocator";
+import { parseAuthError } from "../../../utils/authErrorHelper";
+import { sanitizeText } from "../../../utils/sanitize";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordShow, setPasswordShow] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  // Security: Brute-Force rate limiter state for admin portal
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Security Rate Limiting Check
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      const remainingSecs = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      setError({
+        title: "Accès Admin Verrouillé",
+        description: `Nombreux échecs de connexion. Veuillez réessayer dans ${remainingSecs} secondes.`,
+      });
+      return;
+    }
+
+    const cleanEmail = sanitizeText(email).toLowerCase();
+
     setLoading(true);
 
     try {
-      const user = await signInUseCase.execute(email, password);
+      const user = await signInUseCase.execute(cleanEmail, password);
       if (user.role === "admin" || user.role === "super_admin") {
+        setFailedAttempts(0);
+        setLockoutUntil(null);
         router.push("/admin/dashboard");
       } else {
         // Logged in user is not admin - sign them out immediately
         await signOutUseCase.execute();
-        setError("Accès refusé. Vous n'avez pas les droits d'administration.");
+        const newFail = failedAttempts + 1;
+        setFailedAttempts(newFail);
+        if (newFail >= 5) {
+          setLockoutUntil(Date.now() + 60000);
+        }
+        setError({
+          title: "Accès Refusé",
+          description: "Vous n'avez pas les privilèges d'administration requis pour accéder à ce portail.",
+        });
       }
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Identifiants incorrects.");
+      const newFail = failedAttempts + 1;
+      setFailedAttempts(newFail);
+
+      if (newFail >= 5) {
+        setLockoutUntil(Date.now() + 60000); // 60s lockout
+        setError({
+          title: "Sécurité Admin",
+          description: "Trop d'échecs de connexion consécutifs. Portail admin temporairement verrouillé (60s).",
+        });
+      } else {
+        setError(parseAuthError(err));
+      }
     } finally {
       setLoading(false);
     }
