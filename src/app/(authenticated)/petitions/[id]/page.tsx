@@ -37,6 +37,8 @@ import MilestoneCelebrationModal from "../../../components/MilestoneCelebrationM
 import PetBotViralStudioModal from "../../../components/PetBotViralStudioModal";
 import TargetDecisionMakersSection from "../../../components/TargetDecisionMakersSection";
 import SimilarPetitionsSection from "../../../components/SimilarPetitionsSection";
+import SmartDispatchModal from "../../../components/SmartDispatchModal";
+import PressWireModal from "../../../components/PressWireModal";
 import NotFound from "../../../not-found";
 
 export default function PetitionDetailsPage() {
@@ -57,6 +59,8 @@ export default function PetitionDetailsPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const [showViralStudioModal, setShowViralStudioModal] = useState(false);
+  const [showSmartDispatchModal, setShowSmartDispatchModal] = useState(false);
+  const [showPressWireModal, setShowPressWireModal] = useState(false);
   const [upvotedCommentIds, setUpvotedCommentIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
@@ -627,6 +631,43 @@ export default function PetitionDetailsPage() {
             )}
 
             {/* Owner Action: Declare Victory */}
+            {/* Premium Features #1 & #3 Action Panel */}
+            <div className="p-4 rounded-2xl bg-neutral-950/80 border border-white/10 space-y-3">
+              <span className="text-[10px] font-mono text-green-400 font-bold uppercase tracking-wider block">
+                ⚡ {locale === "fr" ? "Accélérateurs d'Impact Premium" : "Premium Impact Boosters"}
+              </span>
+
+              {/* Feature #1: Smart Dispatch AI */}
+              {petition.isSmartDispatchEnabled ? (
+                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center space-x-2 text-xs text-green-400 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-ping" />
+                  <span>🏛️ {locale === "fr" ? "Dossier Transmis aux Autorités" : "Official Cabinet Dispatch Active"}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSmartDispatchModal(true)}
+                  className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-white/5 border border-green-500/30 hover:border-green-500 text-xs font-bold text-green-400 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <span>🏛️ {locale === "fr" ? "Expédier aux Décideurs (IA)" : "Dispatch to Decision Makers"}</span>
+                </button>
+              )}
+
+              {/* Feature #3: Press Wire Amplifier */}
+              {petition.isPressWireEnabled ? (
+                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center space-x-2 text-xs text-cyan-400 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span>📰 {locale === "fr" ? "Relayé aux Rédactions Médias" : "Press Release Broadcast Active"}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowPressWireModal(true)}
+                  className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-white/5 border border-cyan-500/30 hover:border-cyan-500 text-xs font-bold text-cyan-400 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <span>📰 {locale === "fr" ? "Générer Communiqué de Presse" : "Generate Press Release"}</span>
+                </button>
+              )}
+            </div>
+
             {isOwner && !isVictory && (
               <button
                 onClick={handleDeclareVictory}
@@ -775,6 +816,39 @@ export default function PetitionDetailsPage() {
         city={petition?.city || "Douala"}
         creatorName={petition?.creatorName || "Russel Atebede"}
       />
+
+      {/* Feature #1: Smart Dispatch AI Modal */}
+      {petition && (
+        <SmartDispatchModal
+          petition={petition}
+          isOpen={showSmartDispatchModal}
+          onClose={() => setShowSmartDispatchModal(false)}
+          onSuccess={(recipient) => {
+            setPetition({
+              ...petition,
+              isSmartDispatchEnabled: true,
+              dispatchStatus: "sent",
+              dispatchRecipient: recipient,
+            });
+          }}
+        />
+      )}
+
+      {/* Feature #3: Press Wire Media Amplifier Modal */}
+      {petition && (
+        <PressWireModal
+          petition={petition}
+          isOpen={showPressWireModal}
+          onClose={() => setShowPressWireModal(false)}
+          onSuccess={(releaseContent) => {
+            setPetition({
+              ...petition,
+              isPressWireEnabled: true,
+              pressReleaseContent: releaseContent,
+            });
+          }}
+        />
+      )}
 
     </div>
   );

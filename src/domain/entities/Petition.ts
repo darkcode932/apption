@@ -24,4 +24,9 @@ export interface Petition {
   durationDays?: number | null;
   targetDecisionMaker?: string;
   impactScore?: number;
+  isSmartDispatchEnabled?: boolean;
+  dispatchStatus?: "pending" | "sent" | "delivered";
+  dispatchRecipient?: string;
+  isPressWireEnabled?: boolean;
+  pressReleaseContent?: string;
 }
