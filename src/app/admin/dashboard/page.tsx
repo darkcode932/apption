@@ -91,48 +91,53 @@ export default function AdminDashboardPage() {
     count: petitions.filter((p) => (p.category || "").toLowerCase() === cat.toLowerCase()).length || 1,
   }));
   const maxCatCount = Math.max(...categoryCounts.map((c) => c.count), 1);
+  const categoriesBreakdown = categoryCounts.map(c => ({
+      ...c,
+      percent: Math.round((c.count / totalPetitions) * 100) || 5,
+      color: "bg-emerald-500"
+  }));
 
   // 5 Main KPI Cards
   const statsCards = [
     {
-      title: locale === "fr" ? "Total Pétitions" : "Total Petitions",
+      title: t("admin.stats_petitions"),
       value: totalPetitions,
-      sub: `${activePetitions} actives • ${victoryPetitions} victoires`,
+      sub: `${activePetitions} ${t("admin.status_active").toLowerCase()}s • ${victoryPetitions} ${t("admin.status_victory").toLowerCase()}s`,
       icon: HiDocumentText,
       color: "text-green-400 bg-green-500/10 border-green-500/20",
-      trend: "+14% ce mois",
+      trend: "+14%",
     },
     {
       title: locale === "fr" ? "Drapeaux Discours Haineux (IA)" : "Hate Speech AI Flags",
       value: hateSpeechFlagsCount,
-      sub: "Détections IA sémantique filtrées",
+      sub: locale === "fr" ? "Détections IA sémantique filtrées" : "Filtered semantic AI detections",
       icon: HiExclamationTriangle,
       color: "text-red-400 bg-red-500/10 border-red-500/20",
-      trend: "Filtrage 99.8%",
+      trend: "99.8%",
     },
     {
       title: locale === "fr" ? "Abandons / Échecs Création" : "Creation Drop-offs",
       value: failedCreationRate,
-      sub: `${failedCreationsCount} tentatives non finalisées`,
+      sub: `${failedCreationsCount} ${locale === "fr" ? "tentatives non finalisées" : "uncompleted attempts"}`,
       icon: HiChartBar,
       color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-      trend: "-1.2% vs semaine passée",
+      trend: "-1.2%",
     },
     {
-      title: locale === "fr" ? "Taux de Victoires" : "Success Victory Rate",
+      title: t("admin.success_rate"),
       value: `${victoryRate}%`,
-      sub: `${victoryPetitions} causes citoyennes gagnées`,
+      sub: `${victoryPetitions} ${t("admin.causes_won")}`,
       icon: HiTrophy,
       color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-      trend: "Objectif 20%",
+      trend: "20%",
     },
     {
-      title: locale === "fr" ? "Total Signatures" : "Total Signatures",
+      title: t("admin.stats_signatures"),
       value: totalSignatures.toLocaleString(),
-      sub: "Engagements citoyens enregistrés",
+      sub: t("admin.signatures_engagements"),
       icon: HiHeart,
       color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
-      trend: "+28% de vélocité",
+      trend: "+28%",
     },
   ];
 
@@ -145,15 +150,15 @@ export default function AdminDashboardPage() {
           <div className="flex items-center space-x-2">
             <span className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-mono font-bold flex items-center space-x-1.5">
               <HiCheckCircle className="text-sm" />
-              <span>Système IA Opérationnel</span>
+              <span>{t("admin.system_operational")}</span>
             </span>
-            <span className="text-xs text-neutral-400 font-mono">Modération Sémantique Active</span>
+            <span className="text-xs text-neutral-400 font-mono">{t("admin.semantic_active")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-display tracking-tight">
-            {locale === "fr" ? "Tableau de Bord Analytique" : "Analytics Dashboard"}
+            {t("admin.dashboard_title")}
           </h1>
           <p className="text-xs text-neutral-400 font-light">
-            Suivi stratégique en temps réel des pétitions, détections IA et métriques d&apos;engagement.
+            {t("admin.dashboard_subtitle")}
           </p>
         </div>
 
@@ -163,7 +168,7 @@ export default function AdminDashboardPage() {
             className="px-4 py-2.5 rounded-xl bg-neutral-950 hover:bg-white/5 border border-white/10 text-xs font-bold text-neutral-300 hover:text-white flex items-center space-x-2 transition-all cursor-pointer"
           >
             <HiShieldCheck className="text-green-400 text-base" />
-            <span>File de Modération ({hateSpeechFlagsCount})</span>
+            <span>{t("admin.moderation_queue")} ({hateSpeechFlagsCount})</span>
           </Link>
         </div>
       </div>
@@ -211,11 +216,11 @@ export default function AdminDashboardPage() {
               <div className="flex items-center space-x-2">
                 <HiArrowTrendingUp className="text-green-400 text-lg" />
                 <h3 className="text-base font-extrabold text-white font-display">
-                  Accélération & Vélocité des Signatures (30 Derniers Jours)
+                  {t("admin.chart_velocity_title")}
                 </h3>
               </div>
               <p className="text-xs text-neutral-400 font-light">
-                Volume de mobilisations quotidiennes et pics d&apos;engagement citoyen.
+                {t("admin.chart_velocity_subtitle")}
               </p>
             </div>
             <span className="text-xs text-green-400 font-mono font-bold bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
@@ -249,22 +254,22 @@ export default function AdminDashboardPage() {
                 d="M 0 120 Q 80 90, 150 105 T 300 40 T 450 60 L 500 20"
                 fill="none"
                 stroke="#10b981"
-                strokeWidth="4"
+                strokeWidth="3.5"
                 strokeLinecap="round"
               />
 
-              {/* Pulse Points */}
-              <circle cx="150" cy="105" r="5" fill="#10b981" className="animate-ping" />
-              <circle cx="300" cy="40" r="5" fill="#10b981" />
-              <circle cx="500" cy="20" r="6" fill="#34d399" />
+              {/* Glow Points */}
+              <circle cx="150" cy="105" r="5" fill="#10b981" className="animate-pulse" />
+              <circle cx="300" cy="40" r="5" fill="#34d399" className="animate-pulse" />
+              <circle cx="500" cy="20" r="6" fill="#059669" />
             </svg>
 
             {/* Months Legend */}
-            <div className="flex justify-between text-[11px] text-neutral-400 font-mono pt-2 border-t border-white/5">
-              <span>Semaine 1</span>
-              <span>Semaine 2</span>
-              <span>Semaine 3</span>
-              <span>Aujourd&apos;hui (+28%)</span>
+            <div className="flex justify-between text-[10px] font-mono text-neutral-500 pt-2 border-t border-white/5">
+              <span>{locale === "fr" ? "Semaine 1" : "Week 1"}</span>
+              <span>{locale === "fr" ? "Semaine 2" : "Week 2"}</span>
+              <span>{locale === "fr" ? "Semaine 3" : "Week 3"}</span>
+              <span className="text-green-400 font-bold">{locale === "fr" ? "Aujourd'hui" : "Today"} (+28%)</span>
             </div>
           </div>
         </div>
@@ -273,10 +278,10 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-5 bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl flex flex-col justify-between">
           <div className="border-b border-white/5 pb-4 space-y-1">
             <h3 className="text-base font-extrabold text-white font-display">
-              Répartition des Causes par Catégorie
+              {t("admin.chart_category_title")}
             </h3>
             <p className="text-xs text-neutral-400 font-light">
-              Volume de pétitions par thématique sur la plateforme.
+              {t("admin.chart_category_subtitle")}
             </p>
           </div>
 
@@ -287,7 +292,7 @@ export default function AdminDashboardPage() {
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-neutral-300">
                     <span>{cat.name}</span>
-                    <span className="font-mono text-green-400">{cat.count} pétition(s)</span>
+                    <span className="font-mono text-green-400">{cat.count} {locale === "fr" ? "pétition(s)" : "petition(s)"}</span>
                   </div>
                   <div className="w-full h-2 bg-neutral-950 rounded-full overflow-hidden p-0.5 border border-white/5">
                     <div
@@ -301,8 +306,8 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-neutral-400 font-mono">
-            <span>Dominante : Environnement</span>
-            <span className="text-green-400 font-bold">100% Vérifié IA</span>
+            <span>Dominante : {categoryCounts[0]?.name || "Environnement"}</span>
+            <span className="text-green-400 font-bold">100% {locale === "fr" ? "Vérifié IA" : "AI Verified"}</span>
           </div>
         </div>
 
@@ -312,19 +317,19 @@ export default function AdminDashboardPage() {
       <AdminGisMap petitions={petitions} />
 
       {/* AI Hate Speech Watchtower & Decision Makers Tracker (Axe 3) */}
-      <AdminAiWatchtower />
+      <AdminAiWatchtower petitions={petitions} />
 
       {/* Top Petitions Engagement Table */}
       <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <h3 className="text-base font-extrabold text-white font-display">
-            Pétitions avec la Plus Forte Vélocité
+            {locale === "fr" ? "Pétitions avec la Plus Forte Vélocité" : "Top Velocity Petitions"}
           </h3>
           <Link
             href="/admin/petitions"
             className="text-xs text-green-400 hover:underline font-mono font-bold flex items-center space-x-1"
           >
-            <span>Gérer toutes les pétitions</span>
+            <span>{locale === "fr" ? "Gérer toutes les pétitions" : "Manage all petitions"}</span>
             <HiArrowRight />
           </Link>
         </div>
@@ -333,10 +338,10 @@ export default function AdminDashboardPage() {
           <table className="w-full text-left text-xs text-neutral-300">
             <thead className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider bg-neutral-950/60 border-b border-white/5">
               <tr>
-                <th className="p-3.5 rounded-l-2xl">Titre de la Pétition</th>
-                <th className="p-3.5">Catégorie</th>
+                <th className="p-3.5 rounded-l-2xl">{locale === "fr" ? "Titre de la Pétition" : "Petition Title"}</th>
+                <th className="p-3.5">{locale === "fr" ? "Catégorie" : "Category"}</th>
                 <th className="p-3.5">Signatures</th>
-                <th className="p-3.5">Statut</th>
+                <th className="p-3.5">{locale === "fr" ? "Statut" : "Status"}</th>
                 <th className="p-3.5 rounded-r-2xl">Actions</th>
               </tr>
             </thead>
@@ -354,7 +359,7 @@ export default function AdminDashboardPage() {
                           : "bg-green-500/10 text-green-400 border border-green-500/20"
                       }`}
                     >
-                      {pet.status === "victory" ? "🏆 Victoire" : "🌱 En cours"}
+                      {pet.status === "victory" ? (locale === "fr" ? "🏆 Victoire" : "🏆 Victory") : (locale === "fr" ? "🌱 En cours" : "🌱 Active")}
                     </span>
                   </td>
                   <td className="p-3.5">
@@ -362,7 +367,7 @@ export default function AdminDashboardPage() {
                       href={`/petitions/${pet.id}`}
                       className="text-xs text-neutral-400 hover:text-white underline font-mono"
                     >
-                      Voir →
+                      {locale === "fr" ? "Voir →" : "View →"}
                     </Link>
                   </td>
                 </tr>
